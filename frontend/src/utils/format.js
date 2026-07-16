@@ -5,15 +5,24 @@ export function formatTime(s) {
 }
 
 export async function probeAudioDuration(file) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const a = new Audio();
-    const done = (v) => {
-      URL.revokeObjectURL(url);
-      resolve(v);
-    };
-    a.addEventListener('loadedmetadata', () => done(isFinite(a.duration) ? a.duration : null));
-    a.addEventListener('error', () => done(null));
+    const cleanup = () => URL.revokeObjectURL(url);
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('probeAudioDuration timeout'));
+    }, 10000);
+    a.addEventListener('loadedmetadata', () => {
+      clearTimeout(timeout);
+      cleanup();
+      resolve(isFinite(a.duration) ? a.duration : null);
+    }, { once: true });
+    a.addEventListener('error', () => {
+      clearTimeout(timeout);
+      cleanup();
+      reject(new Error('probeAudioDuration failed to load'));
+    }, { once: true });
     a.src = url;
   });
 }
