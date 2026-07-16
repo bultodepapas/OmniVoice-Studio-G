@@ -125,27 +125,27 @@ export default function useAppData() {
   const loadProfiles = useCallback(async () => {
     try {
       setProfiles(await listProfiles());
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to load profiles', e); }
   }, []);
   const loadHistory = useCallback(async () => {
     try {
       setHistory(await listHistory());
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to load history', e); }
   }, []);
   const loadDubHistory = useCallback(async () => {
     try {
       setDubHistory(await listDubHistory());
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to load dub history', e); }
   }, []);
   const loadProjects = useCallback(async () => {
     try {
       setStudioProjects(await listProjects());
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to load projects', e); }
   }, []);
   const loadExportHistory = useCallback(async () => {
     try {
       setExportHistory(await listExportHistory());
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to load export history', e); }
   }, []);
 
   // ── WebSocket real-time updates ──
