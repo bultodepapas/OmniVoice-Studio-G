@@ -12,6 +12,7 @@ just a front door onto the existing pipeline.
 from __future__ import annotations
 
 import io
+import logging
 import posixpath
 import re
 import zipfile
@@ -29,6 +30,8 @@ _CHAPTER_TITLE_MAX = 60
 # *uncompressed* bytes read from the archive.
 _EPUB_MAX_ENTRY_BYTES = 25 * 1024 * 1024
 _EPUB_MAX_TOTAL_BYTES = 300 * 1024 * 1024
+
+logger = logging.getLogger("omnivoice.longform_import")
 
 
 def chapterize_plaintext(text: str) -> str:
@@ -108,7 +111,8 @@ def _html_to_title_body(xhtml: str) -> tuple[str, str]:
     try:
         p.feed(xhtml)
     except Exception:
-        pass
+        logger.warning("HTML parsing failed for EPUB entry", exc_info=True)
+        return "", ""
     return p.title, p.text()
 
 
