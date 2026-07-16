@@ -18,16 +18,24 @@ export async function probeAudioDuration(file) {
       cleanup();
       resolve(null);
     }, 10000);
-    a.addEventListener('loadedmetadata', () => {
-      clearTimeout(timeout);
-      cleanup();
-      resolve(isFinite(a.duration) ? a.duration : null);
-    }, { once: true });
-    a.addEventListener('error', () => {
-      clearTimeout(timeout);
-      cleanup();
-      resolve(null);
-    }, { once: true });
+    a.addEventListener(
+      'loadedmetadata',
+      () => {
+        clearTimeout(timeout);
+        cleanup();
+        resolve(isFinite(a.duration) ? a.duration : null);
+      },
+      { once: true },
+    );
+    a.addEventListener(
+      'error',
+      () => {
+        clearTimeout(timeout);
+        cleanup();
+        resolve(null);
+      },
+      { once: true },
+    );
     a.src = url;
   });
 }
