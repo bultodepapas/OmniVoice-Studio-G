@@ -111,8 +111,11 @@ def _html_to_title_body(xhtml: str) -> tuple[str, str]:
     try:
         p.feed(xhtml)
     except Exception:
-        logger.warning("HTML parsing failed for EPUB entry", exc_info=True)
-        return "", ""
+        # Keep whatever the extractor collected before the failure: an empty
+        # return would make the caller's `if not body.strip(): continue` drop
+        # the whole chapter from the audiobook silently — a partial chapter
+        # plus this log line is strictly more recoverable than a missing one.
+        logger.warning("HTML parsing failed for EPUB entry; using partial text", exc_info=True)
     return p.title, p.text()
 
 
