@@ -54,7 +54,7 @@ export default function DubbingDemo({ onDismiss }) {
       // Avoid feedback loop — only play target if it's currently paused.
       if (dst.paused) {
         dst.currentTime = src.currentTime;
-        dst.play().catch(() => {});
+        dst.play().catch((e) => { console.warn('Dubbing demo playback failed', e); });
       }
     };
     const onPause = (dst) => () => {

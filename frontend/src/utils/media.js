@@ -160,7 +160,7 @@ const playTrackedAudioElement = (a, { label, peaksBlob, cleanup, onDone } = {}) 
       }
     },
     resume: () => {
-      a.play().catch(() => {});
+      a.play().catch((e) => { console.warn('Failed to resume audio playback', e); });
     },
   });
   const pushTime = () =>
@@ -239,14 +239,14 @@ const playTrackedBufferSource = (ctx, decoded, { label, onDone } = {}) => {
       ctx
         .suspend()
         .then(() => session.update({ paused: true, currentTime: currentPos() }))
-        .catch(() => {});
+        .catch((e) => { console.warn('Failed to suspend AudioContext', e); });
     },
     resume: () => {
       if (finished) return;
       ctx
         .resume()
         .then(() => session.update({ paused: false }))
-        .catch(() => {});
+        .catch((e) => { console.warn('Failed to suspend AudioContext', e); });
     },
   });
 
@@ -400,7 +400,7 @@ export const playPing = () => {
     gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.25);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.25);
-  } catch (e) {}
+  } catch (e) { /* notification sound unavailable */ }
 };
 
 // Re-export for convenience

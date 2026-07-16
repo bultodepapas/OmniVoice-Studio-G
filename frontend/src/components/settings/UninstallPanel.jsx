@@ -99,7 +99,7 @@ export default function UninstallPanel() {
         );
       }
       // The Python env we run on is gone — quit rather than pretend to carry on.
-      await invoke('quit_app').catch(() => {});
+      await invoke('quit_app').catch((e) => { console.warn('Failed to quit app after uninstall', e); });
     } catch (e) {
       setBusy(false);
       toast.error(

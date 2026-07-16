@@ -793,7 +793,7 @@ export default function LogsFooter() {
                     if (notif.id === 'crash-last-session') {
                       import('../api/client')
                         .then(({ apiFetch }) => apiFetch('/system/crash/ack', { method: 'POST' }))
-                        .catch(() => {});
+                        .catch((e) => { console.warn('Failed to acknowledge crash', e); });
                     }
                     if (notif.action.type === 'navigate') {
                       useAppStore.getState().setMode?.(notif.action.target);

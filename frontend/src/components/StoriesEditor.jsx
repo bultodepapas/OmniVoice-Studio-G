@@ -447,7 +447,7 @@ export default function StoriesEditor({ profiles = [] }) {
           // the single-playback manager + global mini-player, and — unlike the
           // old bare `new Audio(blobUrl)` — actually plays under Tauri's
           // WebKit, where blob: URLs are dead in media elements.
-          playBlobAudio(blob, { label: raw }).catch(() => {});
+          playBlobAudio(blob, { label: raw }).catch((e) => { console.warn('Stories preview playback failed', e); });
         } catch (err) {
           console.warn('Stories preview failed:', err);
           setTracks((prev) =>

@@ -54,7 +54,7 @@ export function unlockAudio() {
   _resumeQueue.clear();
   return Promise.all(
     pending.map((ac) =>
-      ac.state === 'suspended' ? ac.resume().catch(() => {}) : Promise.resolve(),
+      ac.state === 'suspended' ? ac.resume().catch((e) => { console.warn('Failed to resume AudioContext during unlock', e); }) : Promise.resolve(),
     ),
   ).then(() => {});
 }
@@ -65,7 +65,7 @@ export function installAudioUnlock() {
   _installed = true;
   const opts = { once: true, capture: true };
   const handler = () => {
-    unlockAudio().catch(() => {});
+    unlockAudio().catch((e) => { console.warn('Audio unlock failed', e); });
     window.removeEventListener('pointerdown', handler, opts);
     window.removeEventListener('keydown', handler, opts);
     window.removeEventListener('touchstart', handler, opts);

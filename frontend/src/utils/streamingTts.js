@@ -93,7 +93,7 @@ export const peaksFromChunkList = (chunkArrays, buckets = 240) => {
 export const createStreamingChunkPlayer = ({ label, sampleRate, crossfadeMs = 0, onDone } = {}) => {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   const ctx = new Ctx();
-  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  if (ctx.state === 'suspended') ctx.resume().catch((e) => { console.warn('Failed to resume AudioContext for streaming', e); });
   const xf = Math.max(0, crossfadeMs) / 1000;
 
   const chunks = []; // Float32Array per received chunk
@@ -193,14 +193,14 @@ export const createStreamingChunkPlayer = ({ label, sampleRate, crossfadeMs = 0,
       ctx
         .suspend()
         .then(() => session.update({ paused: true, currentTime: currentPos() }))
-        .catch(() => {});
+        .catch((e) => { console.warn('Failed to suspend AudioContext for streaming', e); });
     },
     resume: () => {
       if (finished) return;
       ctx
         .resume()
         .then(() => session.update({ paused: false }))
-        .catch(() => {});
+        .catch((e) => { console.warn('Failed to suspend AudioContext for streaming', e); });
     },
   });
 

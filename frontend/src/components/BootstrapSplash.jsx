@@ -539,7 +539,7 @@ export function BootstrapSplash({ stage, message }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
-      .catch(() => {});
+      .catch((e) => { console.warn('Failed to copy text to clipboard', e); });
   };
 
   const stageProgress = progress && progress.stage === stage ? progress : null;

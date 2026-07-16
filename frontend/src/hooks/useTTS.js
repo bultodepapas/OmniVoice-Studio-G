@@ -293,7 +293,7 @@ export default function useTTS({ selectedProfile, setSelectedProfile, loadHistor
         if (useAppStore.getState().autoPlayPreview) {
           try {
             await playBlobAudio(blob, { label: t('player.generated_audio') });
-          } catch (e) {}
+          } catch (e) { console.warn('Failed to auto-play generated audio', e); }
         }
       }
 

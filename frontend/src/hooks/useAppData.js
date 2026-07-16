@@ -166,7 +166,7 @@ export default function useAppData() {
         try {
           await apiModelStatus();
           break;
-        } catch (e) {}
+        } catch (e) { /* API not ready yet, retry */ }
         await new Promise((r) => setTimeout(r, delay));
         delay = Math.min(delay * 2, 4000);
       }
@@ -228,7 +228,7 @@ export default function useAppData() {
       if (saved.cfg) setCfg(saved.cfg);
       if (saved.denoise !== undefined) setDenoise(saved.denoise);
       if (saved.showOverrides !== undefined) setShowOverrides(saved.showOverrides);
-    } catch (e) {}
+    } catch (e) { console.warn('Failed to restore UI state from localStorage', e); }
     return () => {
       cancelled = true;
     };

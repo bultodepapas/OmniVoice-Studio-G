@@ -1429,7 +1429,7 @@ function App() {
                   setMode('stories');
                 }}
                 onRevealExport={(path) => {
-                  exportReveal({ path }).catch(() => {});
+                  exportReveal({ path }).catch((e) => { console.warn('Failed to reveal export in Finder', e); });
                 }}
               />
             </Suspense>

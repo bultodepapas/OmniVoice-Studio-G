@@ -177,7 +177,7 @@ export default function WaveformPlayer({
       if (stale) return;
       setDuration(ws.getDuration());
       setReady(true);
-      if (autoPlayRef.current) ws.play().catch(() => {});
+      if (autoPlayRef.current) ws.play().catch((e) => { console.warn('Waveform auto-play failed', e); });
     });
     ws.on('timeupdate', (t) => {
       if (!stale) setCurrentTime(t);

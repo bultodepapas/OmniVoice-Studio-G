@@ -647,7 +647,7 @@ function WaveformTimeline(
     if (el) {
       try {
         el.currentTime = start;
-        el.play().catch(() => {});
+        el.play().catch((e) => { console.warn('Timeline media play failed', e); });
       } catch (_) {
         playRangeEndRef.current = null;
       }

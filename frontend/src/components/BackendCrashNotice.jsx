@@ -38,7 +38,7 @@ export default function BackendCrashNotice() {
       .then((m) => {
         if (!cancelled && m) setMarker(m);
       })
-      .catch(() => {});
+      .catch((e) => { console.warn('Failed to check for backend crash', e); });
     const onCrash = (e) => {
       if (e?.detail) setMarker(e.detail);
     };
@@ -53,11 +53,11 @@ export default function BackendCrashNotice() {
     setShowDetails(true);
     // Ack on view — the user has seen the honest story; the marker itself
     // stays on disk for bug-report attachment.
-    acknowledgeBackendCrash().catch(() => {});
+    acknowledgeBackendCrash().catch((e) => { console.warn('Failed to acknowledge crash', e); });
   }, []);
-
+.
   const dismiss = useCallback(() => {
-    acknowledgeBackendCrash().catch(() => {});
+    acknowledgeBackendCrash().catch((e) => { console.warn('Failed to acknowledge crash', e); });
     setShowDetails(false);
     setMarker(null);
   }, []);
