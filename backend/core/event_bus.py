@@ -76,6 +76,13 @@ async def _broadcast(event_str: str) -> None:
                 try:
                     q.get_nowait()
                     q.put_nowait(event_str)
+                except asyncio.QueueEmpty:
+                    # Consumer drained the queue between our put_nowait
+                    # and get_nowait — queue has room; retry the put.
+                    try:
+                        q.put_nowait(event_str)
+                    except asyncio.QueueFull:
+                        dead.append(q)
                 except Exception:
                     dead.append(q)
         for q in dead:
