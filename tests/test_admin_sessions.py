@@ -442,3 +442,16 @@ def test_clear_removes_sessions_tickets_and_key_generation(store: AdminSessionSt
 
     assert store.debug_snapshot() == {"sessions": 0, "ws_tickets": 0}
     assert store._key_generation is None
+
+
+def test_key_generation_is_stable_pepper_scoped_and_unicode_safe():
+    first = AdminSessionStore(pepper=b"a" * 32)
+    second = AdminSessionStore(pepper=b"b" * 32)
+    master = "clé-administrateur-\ud800"
+
+    generation = first._generation(master)
+
+    assert len(generation) == 32
+    assert first._generation(master) == generation
+    assert first._generation(master + "x") != generation
+    assert second._generation(master) != generation

@@ -17,6 +17,9 @@ from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
 
 SESSION_TTL_SECONDS = 8 * 60 * 60
 WS_TICKET_TTL_SECONDS = 30
@@ -30,6 +33,7 @@ _ENCODED_TOKEN_LENGTH = 43
 _TOKEN_BODY_RE = re.compile(rf"^[A-Za-z0-9_-]{{{_ENCODED_TOKEN_LENGTH}}}$")
 _ALLOWED_WS_PATHS = frozenset({"/ws/events", "/ws/transcribe"})
 _ADMIN_CAPABILITIES = frozenset({"consume", "admin"})
+_KEY_GENERATION_INFO = b"omnivoice-admin-key-generation-v1"
 
 
 def _hash_token(token: str, pepper: bytes) -> str:
@@ -135,11 +139,12 @@ class AdminSessionStore:
         return api_key.strip() if isinstance(api_key, str) else ""
 
     def _generation(self, api_key: str) -> bytes:
-        # The high-entropy operator key is the HMAC message for a process-local
-        # rotation marker, not a stored password verifier; a slow KDF on every
-        # request would add cost without improving resistance to guessing.
-        # codeql[py/weak-sensitive-data-hashing]
-        return hmac.digest(self._pepper, api_key.encode("utf-8"), "sha256")
+        return HKDF(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=self._pepper,
+            info=_KEY_GENERATION_INFO,
+        ).derive(api_key.encode("utf-8", errors="surrogatepass"))
 
     def _sync_key_locked(self, api_key: str | None) -> bool:
         normalized = self._normalize_master(api_key)

@@ -237,9 +237,9 @@ Design constraints:
   before deterministic oldest-first eviction.
 - Protect mutation and ticket redemption with one lock. Ticket validation and
   deletion must be atomic.
-- Track the current API-key generation as an HMAC using a random, process-local
-  pepper. If the normalized key changes or disappears, clear the store before
-  resolving or issuing another credential.
+- Track the current API-key generation with domain-separated HKDF-SHA-256 using
+  a random, process-local pepper. If the normalized key changes or disappears,
+  clear the store before resolving or issuing another credential.
 - Reject malformed or unreasonably long tokens before hashing.
 - Do not persist the store. Restart invalidation is intentional, reduces
   attack lifetime, avoids a database verifier for a possibly weak operator key,
@@ -957,13 +957,14 @@ Verification evidence:
 
 | Gate | Result |
 |---|---|
-| Session/principal/CSRF/HTTP contract + API/network/ASR compatibility | 323 passed, 1 expected xfail |
-| Branch coverage for the four new backend modules | 95% total; 161 dedicated tests passed |
+| Session/principal/CSRF/HTTP contract + API/network/ASR compatibility | 324 passed, 1 expected xfail |
+| Branch coverage for the four new backend modules | 95% total; 162 dedicated tests passed |
 | Isolated `backend/tests/`, empty HF cache and offline | 254 passed |
 | Prior Linux CI failure order (`mcp_bindings` → network middleware → principal) | 54 passed after runtime singleton resolution fix |
 | Changelog, locale parity, version, CJK, route inventory, and install-doc gates | 243 passed |
 | Full Vitest suite | 265 files, 2,084 passed |
 | Review-focused auth/client regression | 6 files, 98 passed |
+| Session lookup diagnostic | 14.2 μs median over seven 10,000-resolution samples; no database or filesystem I/O |
 | Frontend TypeScript | clean |
 | Frontend oxlint | zero errors; repository baseline warnings only |
 | Production build | passed |
@@ -975,7 +976,7 @@ Repository-wide offline `tests/` was also executed, not sampled: 5,591 tests
 passed before the run exposed four change-adjacent regressions (route snapshot,
 two ASR WebSocket compatibility cases, and an order-sensitive network case).
 The three deterministic regressions were corrected; all four are included in
-the 323-test compatibility gate above. Re-running the remaining last-failed set
+the 324-test compatibility gate above. Re-running the remaining last-failed set
 produced 33 failures, three
 setup errors, and one pass, all confined to unmodified engine/FFmpeg/IndexTTS,
 AppRun/shell, dubbing-export, worker-permission, and Windows path/permission
