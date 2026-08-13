@@ -2,7 +2,7 @@
 
 | Field | Decision |
 | --- | --- |
-| Status | Implemented locally; PR evidence pending |
+| Status | Implemented in draft PR #1541; CI and review pending |
 | Target | One focused frontend PR |
 | Priority | P1 responsiveness and data-safety hardening |
 | Risk | Medium: persistence timing changes, persisted formats do not |
