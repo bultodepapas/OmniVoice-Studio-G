@@ -10,8 +10,10 @@ from __future__ import annotations
 import hmac
 import re
 import secrets
+import sys
 import threading
 import time
+from types import ModuleType
 from base64 import urlsafe_b64encode
 from collections import OrderedDict
 from collections.abc import Callable
@@ -351,4 +353,36 @@ class AdminSessionStore:
             return {"sessions": len(self._sessions), "ws_tickets": len(self._tickets)}
 
 
-admin_session_store = AdminSessionStore()
+#: Synthetic ``sys.modules`` key holding the one per-process store. A module
+#: object in ``sys.modules`` is the only namespace that survives everything
+#: test suites do to this package: ``importlib.reload`` re-executes module
+#: code but never touches unrelated ``sys.modules`` entries, and the purges
+#: that pop whole ``services.*`` / ``api.*`` trees match package prefixes this
+#: underscore-prefixed top-level name is outside of.
+_ANCHOR_MODULE_NAME = "_omnivoice_admin_session_store_anchor"
+
+
+def _process_store() -> AdminSessionStore:
+    """Return THE per-process store, however this module was (re)imported.
+
+    Auth is process-global state: the copy of this module that issues a
+    credential and the copy that later resolves it must always be looking at
+    the same store. A bare module-level ``AdminSessionStore()`` breaks that
+    the moment anything reloads or re-imports this module (fresh module dict →
+    fresh store → freshly issued sessions vanish for holders of the old
+    reference, and vice versa). Anchoring the instance outside the module's
+    own namespace makes every copy of this module share one store.
+    """
+    anchor = sys.modules.get(_ANCHOR_MODULE_NAME)
+    if not isinstance(anchor, ModuleType):
+        anchor = ModuleType(_ANCHOR_MODULE_NAME)
+        anchor.__doc__ = "Process-global anchor for the VoiceStudio admin-session store."
+        sys.modules[_ANCHOR_MODULE_NAME] = anchor
+    store = getattr(anchor, "admin_session_store", None)
+    if store is None:
+        store = AdminSessionStore()
+        anchor.admin_session_store = store
+    return store
+
+
+admin_session_store = _process_store()

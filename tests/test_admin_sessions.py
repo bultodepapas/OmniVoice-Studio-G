@@ -455,3 +455,35 @@ def test_key_generation_is_stable_pepper_scoped_and_unicode_safe():
     assert first._generation(master) == generation
     assert first._generation(master + "x") != generation
     assert second._generation(master) != generation
+
+
+def test_module_reload_and_reimport_cannot_fork_the_process_store():
+    """Reloading/re-importing the module must not split the auth store (#1528).
+
+    Auth is process-global: the module copy that issued a session and any
+    later copy must resolve it identically. Test suites reload ``main`` and
+    purge whole ``services.*`` trees from ``sys.modules`` (test_mcp_bindings'
+    ``client`` fixture); before the anchor fix that forked the singleton —
+    ``api.routers.auth`` issued into a fresh store while ``core.auth`` kept
+    resolving from the old one, so a just-set admin cookie stopped resolving.
+    """
+    import importlib
+    import sys
+
+    import services.admin_sessions as first
+
+    first.admin_session_store.clear()
+    issued = first.admin_session_store.issue(MASTER)
+    try:
+        # Fork vector 1: in-place importlib.reload re-executes module code.
+        reloaded = importlib.reload(first)
+        assert reloaded.admin_session_store is first.admin_session_store
+        assert reloaded.admin_session_store.resolve(issued.token, MASTER) is not None
+
+        # Fork vector 2: sys.modules purge + fresh import (fresh module dict).
+        sys.modules.pop("services.admin_sessions", None)
+        fresh = importlib.import_module("services.admin_sessions")
+        assert fresh.admin_session_store is reloaded.admin_session_store
+        assert fresh.admin_session_store.resolve(issued.token, MASTER) is not None
+    finally:
+        importlib.import_module("services.admin_sessions").admin_session_store.clear()
