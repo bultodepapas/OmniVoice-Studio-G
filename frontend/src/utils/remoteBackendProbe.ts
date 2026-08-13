@@ -12,9 +12,11 @@ const MAX_HEALTH_BYTES = 16 * 1024;
 export function configuredRemoteBackend(): { url: string } | null {
   try {
     const url = localStorage.getItem(LS_BACKEND_URL)?.trim().replace(/\/+$/, '') || '';
-    // Older releases durably stored the master. Consume no value here: startup
-    // must never attach it to a probe or ordinary API request.
-    localStorage.removeItem(LS_API_KEY);
+    // Older releases durably stored the master. Never read it here — startup
+    // must never attach it to a probe or ordinary API request — and never
+    // delete it either: api/client.ts migrates it into a scoped session and
+    // removes it on the first SUCCESSFUL exchange. Wiping it before that
+    // migration succeeds strands a user whose backend is unreachable at launch.
     return url ? { url } : null;
   } catch {
     return null;

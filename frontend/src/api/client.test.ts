@@ -354,7 +354,7 @@ describe('_bootstrapBrowserCredentials', () => {
     sessionStorage.clear();
   });
 
-  it('scrubs the fragment and deletes legacy storage before exchanging exactly once', async () => {
+  it('scrubs the fragment before exchanging exactly once, deleting legacy storage on success', async () => {
     const order: string[] = [];
     localStorage.setItem('ov_api_key', 'older-master');
     const win = {
@@ -368,7 +368,9 @@ describe('_bootstrapBrowserCredentials', () => {
     const exchange = vi.fn(async (master) => {
       order.push('exchange');
       expect(master).toBe('fragment-master');
-      expect(localStorage.getItem('ov_api_key')).toBeNull();
+      // The durable key survives until the backend accepts the exchange — a
+      // failure at this point must leave it for the next launch to retry.
+      expect(localStorage.getItem('ov_api_key')).toBe('older-master');
     });
 
     await _bootstrapBrowserCredentials(win, {
@@ -379,6 +381,49 @@ describe('_bootstrapBrowserCredentials', () => {
     expect(sessionStorage.getItem('ov_pin')).toBe('1234');
     expect(order).toEqual(['scrub:/app#tab=voices', 'exchange']);
     expect(exchange).toHaveBeenCalledOnce();
+    expect(localStorage.getItem('ov_api_key')).toBeNull();
+  });
+
+  it('retains the stored master when the backend is unreachable (no stranding)', async () => {
+    // The upgrade-day disaster this guards against: a remote-backend user's
+    // only copy of OMNIVOICE_API_KEY lives in localStorage, and the backend is
+    // down at first launch. The failed exchange must NOT consume the key.
+    localStorage.setItem('ov_api_key', 'legacy-master');
+    const exchange = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+    await expect(
+      _bootstrapBrowserCredentials(
+        { location: { href: 'https://voice.test/' }, history: { replaceState: vi.fn() } },
+        { apiBase: 'https://voice.test', exchange },
+      ),
+    ).rejects.toThrow();
+
+    expect(exchange).toHaveBeenCalledWith('legacy-master', { apiBase: 'https://voice.test' });
+    expect(localStorage.getItem('ov_api_key')).toBe('legacy-master');
+  });
+
+  it('re-runs the migration on the next launch and consumes the key once it succeeds', async () => {
+    localStorage.setItem('ov_api_key', 'legacy-master');
+    const exchange = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ transport: 'bearer', expiresAt: Date.now() / 1000 + 60 });
+    const launch = () =>
+      _bootstrapBrowserCredentials(
+        { location: { href: 'https://voice.test/' }, history: { replaceState: vi.fn() } },
+        { apiBase: 'https://voice.test', exchange },
+      );
+
+    // Launch 1: backend unreachable — key survives.
+    await expect(launch()).rejects.toThrow();
+    expect(localStorage.getItem('ov_api_key')).toBe('legacy-master');
+
+    // Launch 2: backend back — the retained key is retried and then removed.
+    await launch();
+    expect(exchange).toHaveBeenNthCalledWith(2, 'legacy-master', {
+      apiBase: 'https://voice.test',
+    });
+    expect(localStorage.getItem('ov_api_key')).toBeNull();
   });
 
   it('consumes a legacy stored master without writing it anywhere else', async () => {

@@ -266,9 +266,13 @@ export async function exchangeApiKey(
     timeoutMs = 10_000,
   }: CommonOptions & { legacyStorage?: StorageLike | null },
 ): Promise<{ transport: 'cookie' } | { transport: 'bearer'; expiresAt: number }> {
-  // Delete historical durable storage before any network await. A rejected or
-  // hung exchange must not extend the master key's lifetime on disk.
-  removeLegacyMaster(legacyStorage);
+  // A stale session must not outlive a new exchange attempt, but the
+  // historical durable master is deleted only after the backend ACCEPTS the
+  // exchange. Deleting it up front stranded remote-backend users whose box was
+  // unreachable at first launch after upgrade: the failed exchange consumed
+  // their only stored copy of OMNIVOICE_API_KEY. Keeping it on failure lets
+  // the next launch retry the migration; every success path below removes it,
+  // so the key never coexists with a live session.
   clearAdminSession({ storage });
 
   const master = apiKey.trim();
@@ -301,6 +305,7 @@ export async function exchangeApiKey(
 
   if (transport === 'cookie') {
     if (response.status !== 204) throw new AuthSessionError(response.status);
+    removeLegacyMaster(legacyStorage);
     return { transport };
   }
   if (response.status !== 201) throw new AuthSessionError(response.status);
@@ -320,6 +325,7 @@ export async function exchangeApiKey(
     clearAdminSession({ storage });
     throw new AuthSessionError();
   }
+  removeLegacyMaster(legacyStorage);
   return { transport, expiresAt };
 }
 

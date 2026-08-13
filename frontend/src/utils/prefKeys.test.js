@@ -88,14 +88,16 @@ describe('prefKeys registry', () => {
       localStorage.setItem('ov_stories_global_speed', '1.2');
       localStorage.setItem('omni_ui', '{"uiScale":1.1}');
       localStorage.setItem('dismissed_lang_suggestion', 'true');
-      // Connection target and user data survive; a legacy master must not.
+      // Connection target, the not-yet-migrated legacy master (the user's only
+      // copy until the first successful session exchange consumes it), and
+      // user data all survive.
       localStorage.setItem('ov_backend_url', 'http://192.168.1.10:7842');
       localStorage.setItem('ov_api_key', 'k');
       localStorage.setItem('omni_transcriptions', '[{"text":"hi"}]');
 
       const removed = clearLocalPreferences();
 
-      expect(removed).toHaveLength(9);
+      expect(removed).toHaveLength(8);
       expect(localStorage.getItem('omnivoice.app')).toBeNull();
       expect(localStorage.getItem('omnivoice.navRailSide')).toBeNull();
       expect(localStorage.getItem('omnivoice.logs.collapsed')).toBeNull();
@@ -105,7 +107,7 @@ describe('prefKeys registry', () => {
       expect(localStorage.getItem('omni_ui')).toBeNull();
       expect(localStorage.getItem('dismissed_lang_suggestion')).toBeNull();
       expect(localStorage.getItem('ov_backend_url')).toBe('http://192.168.1.10:7842');
-      expect(localStorage.getItem('ov_api_key')).toBeNull();
+      expect(localStorage.getItem('ov_api_key')).toBe('k');
       expect(localStorage.getItem('omni_transcriptions')).toBe('[{"text":"hi"}]');
     });
   });

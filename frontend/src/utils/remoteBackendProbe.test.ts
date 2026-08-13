@@ -16,11 +16,13 @@ describe('remote backend probe', () => {
     vi.unstubAllGlobals();
   });
 
-  it('reads only the configured URL and deletes master storage from older releases', () => {
+  it('reads only the configured URL, leaving a pending legacy master for the migration', () => {
     localStorage.setItem('ov_backend_url', 'https://gpu-box:3900/');
     localStorage.setItem('ov_api_key', 'secret');
     expect(configuredRemoteBackend()).toEqual({ url: 'https://gpu-box:3900' });
-    expect(localStorage.getItem('ov_api_key')).toBeNull();
+    // Deleted only by a successful session exchange (api/client.ts bootstrap) —
+    // wiping it here would strand a user whose backend is down at launch.
+    expect(localStorage.getItem('ov_api_key')).toBe('secret');
   });
 
   it('probes the auth-exempt health endpoint without any credential', async () => {

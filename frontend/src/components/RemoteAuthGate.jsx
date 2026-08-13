@@ -50,7 +50,9 @@ export default function RemoteAuthGate({ children, forceGate = false, forceMode 
     }
 
     // Remove the secret from controlled UI state before awaiting the network.
-    // exchangeApiKey also deletes any durable value left by an older release.
+    // On success, exchangeApiKey also deletes any durable value left by an
+    // older release; a failed exchange leaves it for the bootstrap migration
+    // to retry on the next launch.
     setValue('');
     setPending(true);
     try {

@@ -144,8 +144,12 @@ type BootstrapWindow = {
 };
 
 /** One-shot migration seam kept injectable so ordering is regression-tested:
- * scrub URL + delete durable storage synchronously, then perform the only
- * request that may carry the master credential. */
+ * scrub the URL synchronously, read (never re-write) the durable master, then
+ * perform the only request that may carry it. The durable copy is deleted only
+ * after that exchange SUCCEEDS: deleting it first stranded remote-backend
+ * users whose backend was unreachable at first launch after upgrade — the
+ * failed exchange destroyed their only copy of the admin key. On failure the
+ * key stays put so the next launch retries this migration. */
 export async function _bootstrapBrowserCredentials(
   win: BootstrapWindow,
   {
@@ -190,25 +194,33 @@ export async function _bootstrapBrowserCredentials(
   } catch {
     /* a fragment exchange can still proceed */
   }
-  try {
-    localStore?.removeItem(LS_API_KEY);
-  } catch {
-    /* storage unavailable; exchangeApiKey repeats this best-effort deletion */
-  }
   if (pin) {
     try {
       sessionStore?.setItem('ov_pin', pin);
     } catch {
-      /* blocked PIN storage must not prevent master deletion or exchange */
+      /* blocked PIN storage must not prevent the exchange */
     }
   }
-  if (master) await exchange(master, { apiBase });
+  if (master) {
+    // A rejected/unreachable exchange throws past this point, leaving the
+    // durable key in place for the next launch's retry (the module-load catch
+    // below still raises the auth gate). Only a session that actually exists
+    // may consume the stored master.
+    await exchange(master, { apiBase });
+    try {
+      localStore?.removeItem(LS_API_KEY);
+    } catch {
+      /* storage unavailable; exchangeApiKey performed the same best-effort deletion */
+    }
+  }
 }
 
 // On load, capture deep-link credentials, scrub the address bar synchronously,
 // and exchange a master key exactly once. Historical durable master storage is
-// consumed and deleted before the first await. apiFetch waits for this one-shot
-// migration so no request races ahead with an unauthenticated first call.
+// read before the first await and deleted only once the exchange succeeds, so
+// an unreachable backend leaves it for the next launch to retry. apiFetch
+// waits for this one-shot migration so no request races ahead with an
+// unauthenticated first call.
 let authBootstrapPromise: Promise<void> = Promise.resolve();
 if (typeof window !== 'undefined') {
   try {

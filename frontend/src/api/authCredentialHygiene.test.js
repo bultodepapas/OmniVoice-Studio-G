@@ -26,17 +26,45 @@ const sources = () =>
     source: fs.readFileSync(file, 'utf8'),
   }));
 
+// Any storage receiver counts: `sessionStorage.setItem('ov_api_key', …)` is the
+// same credential-persistence class as localStorage, and production code passes
+// injected stores under other names (sessionStore, localStore, legacyStorage,
+// storage). Matching `.setItem(<master key>` — whatever the receiver, whatever
+// the quote style, optional chaining included — closes the whole class instead
+// of one spelling. getItem/removeItem (the migration/removal call sites) and
+// setItem of other keys stay legal.
+const PERSISTED_MASTER_RE =
+  /\.setItem\(\s*(?:LS_API_KEY\b|LEGACY_API_KEY_STORAGE_KEY\b|[`'"]ov_api_key[`'"])/;
+
 describe('administrator credential hygiene static guard', () => {
-  it('has no production path that durably writes the legacy master key', () => {
+  it('has no production path that writes the legacy master key to any Web Storage', () => {
     const violations = sources()
-      .filter(({ source }) =>
-        /(?:localStorage|sessionStorage)\.setItem\(\s*(?:LS_API_KEY|LEGACY_API_KEY_STORAGE_KEY|['"]ov_api_key['"])/.test(
-          source,
-        ),
-      )
+      .filter(({ source }) => PERSISTED_MASTER_RE.test(source))
       .map(({ file }) => file);
 
-    expect(violations, 'OMNIVOICE_API_KEY must never enter browser storage').toEqual([]);
+    expect(violations, 'OMNIVOICE_API_KEY must never enter localStorage or sessionStorage').toEqual(
+      [],
+    );
+  });
+
+  it('catches realistic storage receivers, aliases, and quote styles', () => {
+    const caught = [
+      "localStorage.setItem('ov_api_key', key)",
+      'sessionStorage.setItem("ov_api_key", key)',
+      'window.localStorage.setItem(`ov_api_key`, key)',
+      'sessionStore?.setItem(LS_API_KEY, key)',
+      'localStore.setItem( LEGACY_API_KEY_STORAGE_KEY, key)',
+      'legacyStorage?.setItem(LS_API_KEY, master)',
+    ];
+    const allowed = [
+      "localStorage.removeItem('ov_api_key')",
+      'localStore?.getItem(LS_API_KEY)',
+      'storage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(record))',
+      "sessionStore?.setItem('ov_pin', pin)",
+      'localStorage.setItem(LS_BACKEND_URL, normalized)',
+    ];
+    for (const line of caught) expect(PERSISTED_MASTER_RE.test(line), line).toBe(true);
+    for (const line of allowed) expect(PERSISTED_MASTER_RE.test(line), line).toBe(false);
   });
 
   it('has no production WebSocket query builder for a master API key', () => {

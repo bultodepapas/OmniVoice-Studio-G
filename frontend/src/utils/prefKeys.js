@@ -25,14 +25,16 @@ export const PREF_KEY_PREFIXES = [
 export const PREF_KEYS = [
   'omni_ui', // legacy pre-zustand UI blob (useAppData shim)
   'dismissed_lang_suggestion', // BootstrapSplash language-suggestion dismissal
-  'ov_api_key', // legacy master credential; current releases must delete, never preserve it
 ];
 
 /**
  * Keys factory reset must NEVER touch:
- *  - 'ov_backend_url': remote-backend connection target. The historical
- *    'ov_api_key' is intentionally resettable because masters are no longer
- *    allowed in durable browser storage.
+ *  - 'ov_backend_url': remote-backend connection target.
+ *  - 'ov_api_key': legacy master credential awaiting migration into a scoped
+ *    session (api/client.ts bootstrap deletes it after the first SUCCESSFUL
+ *    exchange). Connection credential like 'ov_backend_url': wiping it before
+ *    that migration succeeds strands a remote-backend user whose backend is
+ *    unreachable — the stored copy is the only one they have.
  *  - 'omni_transcriptions': dictation history — user DATA, not a preference.
  *  - 'ov_last_backend_contact': crash diagnostics (#1164) — sessionStorage
  *    timestamp of the backend's last response; not a preference, and wiping
@@ -42,6 +44,7 @@ export const PREF_KEYS = [
  */
 export const PRESERVED_KEYS = [
   'ov_backend_url',
+  'ov_api_key',
   'omni_transcriptions',
   'ov_last_backend_contact',
   'ov_admin_session',

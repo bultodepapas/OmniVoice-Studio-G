@@ -79,9 +79,10 @@ export default function RemoteBackendPanel({ reload = () => window.location.relo
     setProbe(null);
     const target = normalized || API;
     const master = key.trim();
-    // Retain the secret only in this in-flight stack frame.
+    // Retain the secret only in this in-flight stack frame. A pending legacy
+    // master in localStorage is left alone: a mere connection test must not
+    // consume the key the bootstrap migration still needs to retry.
     setKey('');
-    removeLegacyMaster();
     try {
       const result = await probeRemoteBackend(target);
       if (!result.ok || !master) {
@@ -111,7 +112,6 @@ export default function RemoteBackendPanel({ reload = () => window.location.relo
     setSaving(true);
     const master = key.trim();
     setKey('');
-    removeLegacyMaster();
     try {
       if (normalized) {
         if (!isValidBackendUrl(normalized)) {
@@ -156,10 +156,15 @@ export default function RemoteBackendPanel({ reload = () => window.location.relo
         }
         localStorage.setItem(LS_BACKEND_URL, normalized);
       } else {
+        // Disabling the remote backend is an explicit discard: the pending
+        // legacy master goes with the connection it belonged to. Everywhere
+        // else the durable key is consumed only by a successful exchange
+        // (exchangeApiKey removes it), so an unreachable backend can't strand
+        // the user by destroying their only copy.
         localStorage.removeItem(LS_BACKEND_URL);
         clearAdminSession();
+        removeLegacyMaster();
       }
-      removeLegacyMaster();
       // api/client.ts resolves the base once at module load.
       reload();
     } finally {

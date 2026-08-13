@@ -137,7 +137,7 @@ describe('short-lived admin session client', () => {
     });
   });
 
-  it('removes the legacy master before the exchange settles', async () => {
+  it('retains the legacy master while the exchange is pending and removes it on success', async () => {
     localStorage.setItem(LEGACY_API_KEY_STORAGE_KEY, MASTER);
     let resolveFetch: (value: Response) => void = () => {};
     const fetchImpl = vi.fn(
@@ -154,12 +154,15 @@ describe('short-lived admin session client', () => {
       now: () => NOW_SECONDS * 1000,
     });
 
-    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBeNull();
+    // Not yet: only a session that actually exists may consume the stored key.
+    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBe(MASTER);
     resolveFetch(response({ token: SESSION, expires_at: NOW_SECONDS + 3600 }));
     await pending;
+    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBeNull();
   });
 
   it('never retries a failed exchange and exposes no master or response body in its error', async () => {
+    localStorage.setItem(LEGACY_API_KEY_STORAGE_KEY, MASTER);
     const reflected = `invalid credential: ${MASTER}`;
     const fetchImpl = vi.fn().mockResolvedValue(response({ detail: reflected }, 401));
 
@@ -176,10 +179,11 @@ describe('short-lived admin session client', () => {
     expect(String(error)).not.toContain(reflected);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(sessionStorage.length).toBe(0);
-    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBeNull();
+    // A failed exchange leaves the durable key for the next launch's retry.
+    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBe(MASTER);
   });
 
-  it('bounds a hung exchange and still leaves no durable master', async () => {
+  it('bounds a hung exchange and retains the durable master for the next migration attempt', async () => {
     vi.useFakeTimers();
     localStorage.setItem(LEGACY_API_KEY_STORAGE_KEY, MASTER);
     const fetchImpl = vi.fn(
@@ -202,7 +206,8 @@ describe('short-lived admin session client', () => {
 
     expect(await observed).toBeInstanceOf(AuthSessionError);
     expect(fetchImpl).toHaveBeenCalledOnce();
-    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBeNull();
+    // Unreachable/hung backend: the stored copy is the user's only copy.
+    expect(localStorage.getItem(LEGACY_API_KEY_STORAGE_KEY)).toBe(MASTER);
     expect(sessionStorage.length).toBe(0);
     vi.useRealTimers();
   });
