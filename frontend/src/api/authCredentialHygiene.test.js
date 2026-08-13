@@ -34,7 +34,7 @@ const sources = () =>
 // of one spelling. getItem/removeItem (the migration/removal call sites) and
 // setItem of other keys stay legal.
 const PERSISTED_MASTER_RE =
-  /\.setItem\(\s*(?:LS_API_KEY\b|LEGACY_API_KEY_STORAGE_KEY\b|[`'"]ov_api_key[`'"])/;
+  /\.setItem(?:\?\.)?\(\s*(?:LS_API_KEY\b|LEGACY_API_KEY_STORAGE_KEY\b|[`'"]ov_api_key[`'"])/;
 
 describe('administrator credential hygiene static guard', () => {
   it('has no production path that writes the legacy master key to any Web Storage', () => {
@@ -50,6 +50,7 @@ describe('administrator credential hygiene static guard', () => {
   it('catches realistic storage receivers, aliases, and quote styles', () => {
     const caught = [
       "localStorage.setItem('ov_api_key', key)",
+      "localStorage.setItem?.('ov_api_key', key)",
       'sessionStorage.setItem("ov_api_key", key)',
       'window.localStorage.setItem(`ov_api_key`, key)',
       'sessionStore?.setItem(LS_API_KEY, key)',
