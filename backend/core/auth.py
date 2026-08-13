@@ -147,7 +147,7 @@ def _credential_candidate(connection) -> _CredentialCandidate | None:
     query = getattr(connection, "query_params", None) or {}
     cookies = getattr(connection, "cookies", None) or {}
 
-    raw_authorization = _mapping_get(headers, "authorization")
+    raw_authorization = authorization_header(connection)
     authorization = raw_authorization.strip()
     if raw_authorization.lower().startswith("bearer "):
         value = raw_authorization[7:].strip()
@@ -214,7 +214,21 @@ def presented_api_key(connection) -> str:
 
 def authorization_header(connection) -> str:
     headers = getattr(connection, "headers", None) or {}
-    return _mapping_get(headers, "authorization").strip()
+    return _mapping_get(headers, "authorization")
+
+
+def authorization_credential_present(connection) -> bool:
+    """Whether Authorization contains an authoritative credential channel.
+
+    This deliberately mirrors :func:`_credential_candidate`: whitespace and
+    ``Bearer`` followed only by spaces are empty channels that may fall back to
+    legacy migration state. Unsupported schemes and ``Bearer`` without the
+    required separating space remain explicit invalid credentials.
+    """
+    authorization = authorization_header(connection)
+    if authorization.lower().startswith("bearer ") and not authorization[7:].strip():
+        return False
+    return bool(authorization.strip())
 
 
 def bearer_header_value(connection) -> str:

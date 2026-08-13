@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from core.auth import (
     CredentialTransport,
     PrincipalKind,
-    authorization_header,
+    authorization_credential_present,
     legacy_master_cookie_valid,
     master_header_valid,
     principal_for,
@@ -72,7 +72,7 @@ def create_session(payload: SessionRequest, request: Request) -> Response:
     if not configured:
         raise HTTPException(status_code=401, detail="API key required")
 
-    authorization_present = bool(authorization_header(request))
+    authorization_present = authorization_credential_present(request)
     header_authorized = master_header_valid(request)
     legacy_authorized = legacy_master_cookie_valid(request)
     migrating_legacy = False

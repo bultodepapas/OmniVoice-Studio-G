@@ -293,6 +293,34 @@ def test_legacy_cookie_migrates_once_with_same_origin_csrf():
     assert client.cookies.get("ov_key", domain="voice.test") is None
 
 
+def test_empty_bearer_channel_does_not_block_legacy_cookie_migration():
+    client = _client()
+    client.cookies.set("ov_key", MASTER, domain="voice.test")
+
+    response = _issue_cookie(
+        client,
+        headers={**CSRF_HEADERS, "Authorization": "Bearer    "},
+    )
+
+    assert response.status_code == 204
+    assert client.cookies.get("ov_session", domain="voice.test") is not None
+    assert client.cookies.get("ov_key", domain="voice.test") is None
+
+
+def test_explicit_invalid_authorization_blocks_legacy_cookie_migration():
+    client = _client()
+    client.cookies.set("ov_key", MASTER, domain="voice.test")
+
+    response = _issue_cookie(
+        client,
+        headers={**CSRF_HEADERS, "Authorization": "Basic not-a-master"},
+    )
+
+    assert response.status_code == 401
+    assert client.cookies.get("ov_session", domain="voice.test") is None
+    assert client.cookies.get("ov_key", domain="voice.test") == MASTER
+
+
 @pytest.mark.parametrize("origin", [None, "null", "http://evil.test"])
 def test_legacy_cookie_migration_fails_without_exact_origin(origin):
     client = _client()

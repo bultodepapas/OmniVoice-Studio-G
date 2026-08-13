@@ -955,7 +955,7 @@ Verification evidence:
 | Gate | Result |
 |---|---|
 | Session/principal/CSRF/HTTP contract + API/network/ASR compatibility | 304 passed, 1 expected xfail |
-| Branch coverage for the four new backend modules | 95% total; 144 dedicated tests passed |
+| Branch coverage for the four new backend modules | 95% total; 146 dedicated tests passed |
 | Isolated `backend/tests/`, empty HF cache and offline | 254 passed |
 | Changelog, locale parity, version, CJK, route inventory, and install-doc gates | 243 passed |
 | Full Vitest suite | 265 files, 2,083 passed |
