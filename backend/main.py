@@ -341,7 +341,6 @@ if not os.environ.get("OMNIVOICE_DISABLE_FILE_LOG"):
 logger = logging.getLogger("omnivoice.api")
 
 import asyncio
-import secrets
 import time
 import threading
 from contextlib import asynccontextmanager
@@ -378,11 +377,12 @@ from services import network_share
 from core.auth import (
     CredentialTransport,
     PrincipalKind,
+    credential_matches,
     is_local_host,
     principal_for,
     remote_api_key,
 )
-from core.csrf import cookie_csrf_allowed, origin_allowed
+from core.csrf import SAFE_HTTP_METHODS, cookie_csrf_allowed, origin_allowed
 
 from api.routers import (
     system,
@@ -1128,7 +1128,7 @@ class NetworkAccessMiddleware:
             or request.cookies.get("ov_pin")
             or ""
         )
-        if not secrets.compare_digest(supplied, pin):
+        if not credential_matches(supplied, pin):
             resp = JSONResponse({"detail": "PIN required"}, status_code=401)
             return await resp(scope, receive, send)
         # Valid PIN. Set the cookie by wrapping send to inject Set-Cookie on the
@@ -1243,7 +1243,7 @@ class BearerKeyMiddleware:
             return await resp(scope, receive, send)
         if (
             scope["type"] == "http"
-            and str(scope.get("method", "GET")).upper() not in {"GET", "HEAD", "OPTIONS"}
+            and str(scope.get("method", "GET")).upper() not in SAFE_HTTP_METHODS
             and principal.transport
             in {CredentialTransport.COOKIE, CredentialTransport.LEGACY_COOKIE}
             and not cookie_csrf_allowed(conn)

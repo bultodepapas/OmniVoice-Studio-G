@@ -24,6 +24,7 @@ describe('remote backend probe', () => {
   });
 
   it('probes the auth-exempt health endpoint without any credential', async () => {
+    localStorage.setItem('ov_api_key', 'secret');
     const fetchImpl = vi
       .fn()
       .mockResolvedValue(response({ status: 'ok', version: '0.4.2', device: 'cuda' }));

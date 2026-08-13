@@ -201,14 +201,34 @@ describe('RemoteBackendPanel', () => {
   it('offers an explicit disable action that clears the remote URL and key', async () => {
     localStorage.setItem('ov_backend_url', 'http://old-box:3900');
     localStorage.setItem('ov_api_key', 'secret');
-    sessionStorage.setItem('ov_admin_session', 'session');
     render(<RemoteBackendPanel reload={reload} />);
     fireEvent.click(screen.getByTestId('remote-backend-disable'));
     await waitFor(() => expect(reload).toHaveBeenCalledOnce());
     expect(localStorage.getItem('ov_backend_url')).toBeNull();
     expect(localStorage.getItem('ov_api_key')).toBeNull();
-    expect(sessionStorage.getItem('ov_admin_session')).toBeNull();
     expect(authMocks.clearAdminSession).toHaveBeenCalled();
+  });
+
+  it('clears a restored session before switching targets without a new key', async () => {
+    localStorage.setItem('ov_backend_url', 'http://old-box:3900');
+    sessionStorage.setItem(
+      'ov_admin_session',
+      JSON.stringify({
+        token: `ovs_admin_session_${'S'.repeat(43)}`,
+        expiresAt: Date.now() / 1000 + 3600,
+        apiBase: 'http://old-box:3900',
+      }),
+    );
+    askConfirm.mockResolvedValue(true);
+    render(<RemoteBackendPanel reload={reload} />);
+    setUrl('http://new-box:3900');
+
+    clickSave();
+
+    await waitFor(() => expect(reload).toHaveBeenCalledOnce());
+    expect(authMocks.exchangeApiKey).not.toHaveBeenCalled();
+    expect(authMocks.clearAdminSession).toHaveBeenCalledOnce();
+    expect(localStorage.getItem('ov_backend_url')).toBe('http://new-box:3900');
   });
 
   it('clears both settings and reloads without confirmation when the URL is emptied', async () => {

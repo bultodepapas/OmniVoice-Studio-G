@@ -2,24 +2,48 @@
 
 from __future__ import annotations
 
+import importlib
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 
 import pytest
 
-from core.auth import (
-    ADMIN_CAPABILITIES,
-    LOOPBACK_CAPABILITIES,
-    AuthPrincipal,
-    CredentialTransport,
-    PrincipalKind,
-    is_local_host,
-    principal_for,
-    resolve_principal,
-)
-from services.admin_sessions import AdminSessionStore
+if TYPE_CHECKING:
+    from core.auth import (
+        ADMIN_CAPABILITIES,
+        LOOPBACK_CAPABILITIES,
+        AuthPrincipal,
+        CredentialTransport,
+        PrincipalKind,
+        credential_matches,
+        is_local_host,
+        principal_for,
+        resolve_principal,
+    )
+    from services.admin_sessions import AdminSessionStore
 
 
 MASTER = "MASTER_DO_NOT_LEAK_7d29"
+_AUTH_SYMBOLS = (
+    "ADMIN_CAPABILITIES",
+    "LOOPBACK_CAPABILITIES",
+    "AuthPrincipal",
+    "CredentialTransport",
+    "PrincipalKind",
+    "credential_matches",
+    "is_local_host",
+    "principal_for",
+    "resolve_principal",
+)
+
+
+@pytest.fixture(autouse=True)
+def _resolve_active_auth_modules():
+    """Bind active modules after tests that isolate or replace sys.modules."""
+    auth = importlib.import_module("core.auth")
+    sessions = importlib.import_module("services.admin_sessions")
+    globals().update({name: getattr(auth, name) for name in _AUTH_SYMBOLS})
+    globals()["AdminSessionStore"] = sessions.AdminSessionStore
 
 
 class Connection:
@@ -32,6 +56,7 @@ class Connection:
         cookies: dict[str, str] | None = None,
         scope_type: str = "http",
         path: str = "/v1/audio/voices",
+        root_path: str = "",
         pin: str | None = None,
     ) -> None:
         network_share = SimpleNamespace(pin=pin) if pin is not None else None
@@ -43,13 +68,14 @@ class Connection:
         self.scope = {
             "type": scope_type,
             "path": path,
+            "root_path": root_path,
             "state": {},
             "client": (host, 1),
         }
 
 
 @pytest.fixture
-def store() -> AdminSessionStore:
+def store(_resolve_active_auth_modules) -> AdminSessionStore:
     return AdminSessionStore(pepper=b"x" * 32)
 
 
@@ -97,6 +123,45 @@ def test_valid_master_header_produces_admin_principal(monkeypatch, store):
     assert MASTER not in repr(principal)
 
 
+def test_unicode_master_is_compared_as_utf8_bytes(monkeypatch, store):
+    master = "clé-administrateur-sécurité"
+    monkeypatch.setenv("OMNIVOICE_API_KEY", master)
+
+    principal = resolve_principal(
+        Connection(headers={"authorization": f"Bearer {master}"}),
+        store=store,
+    )
+
+    assert credential_matches(master, master) is True
+    assert principal.kind is PrincipalKind.API_KEY
+
+
+def test_credential_comparison_handles_unpaired_surrogates_without_raising():
+    assert credential_matches("key-\ud800", "key-\ud800") is True
+    assert credential_matches("key-\ud800", "key-\ud801") is False
+
+
+@pytest.mark.parametrize(
+    "connection",
+    [
+        Connection(headers={"authorization": "Bearer clé-incorrecte"}),
+        Connection(query={"api_key": "sécurité-incorrecte"}),
+        Connection(cookies={"ov_key": "contraseña-incorrecta"}),
+        Connection(headers={"x-omnivoice-pin": "clé"}, pin="123456"),
+    ],
+)
+def test_non_ascii_invalid_credentials_fail_closed_without_type_error(
+    monkeypatch,
+    store,
+    connection,
+):
+    monkeypatch.setenv("OMNIVOICE_API_KEY", MASTER)
+
+    principal = resolve_principal(connection, store=store)
+
+    assert principal.kind is PrincipalKind.ANONYMOUS
+
+
 def test_valid_session_header_produces_admin_principal(monkeypatch, store):
     monkeypatch.setenv("OMNIVOICE_API_KEY", MASTER)
     session = store.issue(MASTER)
@@ -122,6 +187,25 @@ def test_valid_session_cookie_produces_admin_principal(monkeypatch, store):
 
     assert principal.kind is PrincipalKind.ADMIN_SESSION
     assert principal.transport is CredentialTransport.COOKIE
+
+
+def test_default_store_resolves_current_process_singleton_after_module_rebind(monkeypatch):
+    monkeypatch.setenv("OMNIVOICE_API_KEY", MASTER)
+    sessions = importlib.import_module("services.admin_sessions")
+    active_store = sessions.AdminSessionStore(pepper=b"a" * 32)
+    stale_store = sessions.AdminSessionStore(pepper=b"s" * 32)
+    issued = active_store.issue(MASTER)
+    monkeypatch.setattr(sessions, "admin_session_store", active_store)
+    auth = importlib.import_module("core.auth")
+    monkeypatch.setattr(auth, "admin_session_store", stale_store, raising=False)
+
+    principal = resolve_principal(
+        Connection(headers={"authorization": f"Bearer {issued.token}"}),
+    )
+
+    assert principal.kind is PrincipalKind.ADMIN_SESSION
+    assert active_store.active_session_count == 1
+    assert stale_store.active_session_count == 0
 
 
 def test_query_and_legacy_cookie_remain_master_compatibility_channels(monkeypatch, store):
@@ -270,6 +354,43 @@ def test_ws_ticket_is_consumed_and_attached_once(monkeypatch, store):
     assert first.transport is CredentialTransport.WS_TICKET
     assert second is first
     assert store.consume_ws_ticket(ticket.token, "/ws/events", MASTER) is None
+
+
+def test_ws_ticket_accepts_only_its_asgi_configured_root_path_prefix(monkeypatch, store):
+    monkeypatch.setenv("OMNIVOICE_API_KEY", MASTER)
+    session = store.issue(MASTER)
+    ticket = store.issue_ws_ticket(session.token, "/ws/events", MASTER)
+
+    principal = resolve_principal(
+        Connection(
+            scope_type="websocket",
+            path="/studio/ws/events",
+            root_path="/studio",
+            query={"ws_ticket": ticket.token},
+        ),
+        store=store,
+    )
+
+    assert principal.kind is PrincipalKind.ADMIN_SESSION
+    assert principal.transport is CredentialTransport.WS_TICKET
+
+
+def test_ws_ticket_rejects_unconfigured_lookalike_prefix(monkeypatch, store):
+    monkeypatch.setenv("OMNIVOICE_API_KEY", MASTER)
+    session = store.issue(MASTER)
+    ticket = store.issue_ws_ticket(session.token, "/ws/events", MASTER)
+
+    principal = resolve_principal(
+        Connection(
+            scope_type="websocket",
+            path="/untrusted/ws/events",
+            query={"ws_ticket": ticket.token},
+        ),
+        store=store,
+    )
+
+    assert principal.kind is PrincipalKind.ANONYMOUS
+    assert principal.transport is CredentialTransport.WS_TICKET
 
 
 def test_invalid_ws_ticket_is_authoritative_over_legacy_query_key(monkeypatch, store):

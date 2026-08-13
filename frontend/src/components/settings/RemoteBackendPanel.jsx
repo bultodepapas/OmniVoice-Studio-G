@@ -18,7 +18,7 @@ import { Server } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Trans, useTranslation } from 'react-i18next';
 import { LS_BACKEND_URL, LS_API_KEY, API } from '../../api/client';
-import { clearAdminSession, exchangeApiKey } from '../../api/authSession';
+import { clearAdminSession, exchangeApiKey, getAdminSession } from '../../api/authSession';
 import { askConfirm } from '../../utils/dialog';
 import { disableRemoteBackend, probeRemoteBackend } from '../../utils/remoteBackendProbe';
 import { SettingsSection, SettingRow, InfoHint, SettingsInput } from './primitives';
@@ -67,6 +67,8 @@ export default function RemoteBackendPanel({ reload = () => window.location.relo
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [authenticatedTarget, setAuthenticatedTarget] = useState(null);
+  const [initialTarget] = useState(() => (storedBackendUrl() || API).trim().replace(/\/+$/, ''));
+  const [restoredSessionTarget] = useState(() => getAdminSession(initialTarget)?.apiBase ?? null);
   const hasSavedRemote = Boolean(storedBackendUrl());
 
   const normalized = url.trim().replace(/\/+$/, '');
@@ -149,7 +151,7 @@ export default function RemoteBackendPanel({ reload = () => window.location.relo
             });
             return;
           }
-        } else if (authenticatedTarget && authenticatedTarget !== normalized) {
+        } else if ((authenticatedTarget ?? restoredSessionTarget ?? initialTarget) !== normalized) {
           clearAdminSession();
         }
         localStorage.setItem(LS_BACKEND_URL, normalized);

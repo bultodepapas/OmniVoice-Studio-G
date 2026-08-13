@@ -7,6 +7,7 @@ import {
   getUnacknowledgedBackendCrash,
   type LastRunCrashRecord,
 } from '../utils/backendCrash';
+import { ADMIN_SESSION_STORAGE_KEY } from '../api/authSession';
 
 // #1164: outside the Tauri shell the crash getters must fall back to the
 // backend's own run-sentinel forensics (GET /system/last-run-crash) and adapt
@@ -90,7 +91,7 @@ describe('browser fallback — getLastBackendCrash / ack over HTTP', () => {
     const { API } = await import('../api/client');
     const session = `ovs_admin_session_${'S'.repeat(43)}`;
     sessionStorage.setItem(
-      'ov_admin_session',
+      ADMIN_SESSION_STORAGE_KEY,
       JSON.stringify({ token: session, expiresAt: Date.now() / 1000 + 3600, apiBase: API }),
     );
     localStorage.setItem('ov_api_key', 'legacy-master');

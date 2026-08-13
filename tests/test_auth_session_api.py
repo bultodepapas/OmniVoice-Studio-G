@@ -14,23 +14,26 @@ CSRF_HEADERS = {
 
 @pytest.fixture(autouse=True)
 def auth_environment(monkeypatch):
+    from api.routers.auth import _exchange_attempt_limiter
     from services.admin_sessions import admin_session_store
 
     admin_session_store.clear()
+    _exchange_attempt_limiter.reset()
     monkeypatch.setenv("OMNIVOICE_API_KEY", MASTER)
     monkeypatch.setenv("OMNIVOICE_SERVER_MODE", "1")
     monkeypatch.delenv("OMNIVOICE_TRUSTED_NETWORKS", raising=False)
     yield
     admin_session_store.clear()
+    _exchange_attempt_limiter.reset()
 
 
-def _client(*, https: bool = False, loopback: bool = False):
+def _client(*, https: bool = False, loopback: bool = False, host: str | None = None):
     from fastapi.testclient import TestClient
     from main import app
 
     scheme = "https" if https else "http"
-    host = "127.0.0.1" if loopback else "10.0.0.5"
-    return TestClient(app, base_url=f"{scheme}://voice.test", client=(host, 1))
+    client_host = host or ("127.0.0.1" if loopback else "10.0.0.5")
+    return TestClient(app, base_url=f"{scheme}://voice.test", client=(client_host, 1))
 
 
 def _master_headers() -> dict[str, str]:
@@ -144,6 +147,82 @@ def test_query_master_cannot_issue_session():
 
     assert response.status_code == 401
     assert "set-cookie" not in response.headers
+
+
+def test_failed_exchange_is_rate_limited_per_client_without_locking_out_valid_master():
+    client = _client()
+    request = {
+        "json": {"transport": "bearer"},
+        "headers": {"Authorization": "Bearer wrong"},
+    }
+
+    for _attempt in range(10):
+        assert client.post("/api/auth/session", **request).status_code == 401
+    limited = client.post("/api/auth/session", **request)
+
+    assert limited.status_code == 429
+    assert 1 <= int(limited.headers["retry-after"]) <= 60
+    assert limited.headers["cache-control"] == "no-store"
+    assert _issue_bearer(client).status_code == 201
+    assert client.post("/api/auth/session", **request).status_code == 401
+
+
+def test_failed_exchange_limit_does_not_cross_client_boundaries():
+    request = {
+        "json": {"transport": "bearer"},
+        "headers": {"Authorization": "Bearer wrong"},
+    }
+    first = _client(host="10.0.0.5")
+    for _attempt in range(11):
+        response = first.post("/api/auth/session", **request)
+    assert response.status_code == 429
+
+    assert _client(host="10.0.0.6").post("/api/auth/session", **request).status_code == 401
+
+
+def test_exchange_limiter_expires_failures_on_a_monotonic_clock():
+    from api.routers.auth import _ExchangeAttemptLimiter
+
+    now = [100.0]
+    limiter = _ExchangeAttemptLimiter(
+        monotonic=lambda: now[0],
+        limit=2,
+        window_seconds=60,
+        max_clients=4,
+    )
+
+    assert limiter.register_failure("client") is None
+    assert limiter.register_failure("client") is None
+    assert limiter.register_failure("client") == 60
+    now[0] += 60
+    assert limiter.register_failure("client") is None
+
+
+def test_exchange_limiter_bounds_clients_and_each_failure_window():
+    from api.routers.auth import _ExchangeAttemptLimiter
+
+    limiter = _ExchangeAttemptLimiter(
+        monotonic=lambda: 100.0,
+        limit=2,
+        window_seconds=60,
+        max_clients=2,
+    )
+
+    for _attempt in range(20):
+        assert limiter.register_failure("first") in (None, 60)
+    limiter.register_failure("second")
+    limiter.register_failure("third")
+
+    assert list(limiter._attempts) == ["second", "third"]
+    assert all(len(failures) <= 2 for failures in limiter._attempts.values())
+
+
+@pytest.mark.parametrize("invalid_bound", [0, -1])
+def test_exchange_limiter_rejects_nonpositive_bounds(invalid_bound):
+    from api.routers.auth import _ExchangeAttemptLimiter
+
+    with pytest.raises(ValueError, match="rate-limit bounds must be positive"):
+        _ExchangeAttemptLimiter(limit=invalid_bound)
 
 
 def test_loopback_still_requires_master_to_issue_session():

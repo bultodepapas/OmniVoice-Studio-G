@@ -172,6 +172,11 @@ the backend, and never placed in a WebSocket URL. Legacy `ov_api_key` browser
 storage is deleted before migration waits on the network. All auth responses,
 including errors, carry `Cache-Control: no-store`.
 
+Failed session exchanges are limited per client to ten attempts in a rolling
+60-second window and then return `429` with `Retry-After`. A correct master key
+is always evaluated and clears the failure window, so an attacker cannot lock
+an operator out by deliberately exhausting the limit.
+
 Cookie-authenticated mutations require both an exact allowed `Origin` and
 `X-VoiceStudio-CSRF: 1`. Side-effectful GET actions additionally require the
 browser's `Sec-Fetch-Site: same-origin`. Bearer/header clients are not subject
@@ -320,13 +325,25 @@ answered before PIN/API-key enforcement, and gate-generated `401` responses
 retain CORS headers so the UI can read the actual failure and prompt for the
 right credential.
 
+TLS-terminating proxies must establish the effective scheme at the ASGI server
+boundary. Uvicorn's proxy-header handling trusts loopback by default, which
+covers Tailscale Serve; a custom proxy on another address must be listed with
+`--forwarded-allow-ips=<proxy-ip>` (and proxy headers must remain enabled).
+VoiceStudio deliberately does not trust a raw `X-Forwarded-Proto` header inside
+the application: once Uvicorn accepts a trusted proxy, the resolved ASGI scheme
+drives exact-Origin checks and the session cookie's `Secure` attribute.
+For a public path prefix such as `/studio`, either strip that prefix before
+forwarding or configure the ASGI `root_path` to the same value. WebSocket ticket
+validation removes only that trusted, configured prefix; it never accepts an
+arbitrary path merely because it ends in `/ws/events` or `/ws/transcribe`.
+
 ## Status codes
 
 | Code | Meaning | What to do |
 |---|---|---|
 | **401** | Consumption auth failed — `{"detail": "PIN required"}` or `{"detail": "API key required"}`. | Supply the PIN / key (header, cookie, or query param above). A WebSocket surfaces this as close code **1008**. |
 | **403** | Authorization failed: loopback/native access was required, cookie Origin/CSRF validation failed, a server-mode mutation lacked an admin credential, or a native path capability was invalid/expired. | A PIN cannot grant admin or filesystem access. Re-authenticate the UI; scripts should use the API-key header; run native operations from the desktop app. |
-| **429** | **Not an auth failure.** The GPU pool is saturated (admission control) or a model download is rate-limited. Ships with `Retry-After` and `X-VoiceStudio-Retryable: true`. | Back off for `Retry-After` seconds and retry the identical request. |
+| **429** | A failed administrator-session exchange exceeded its per-client limit, the GPU pool is saturated, or a model download is rate-limited. Ships with `Retry-After`; workload throttles also carry `X-VoiceStudio-Retryable: true`. | Back off for `Retry-After` seconds. For authentication, verify the master before retrying; a correct master is never locked out. |
 
 ---
 

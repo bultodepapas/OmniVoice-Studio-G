@@ -10,6 +10,7 @@ os.environ.setdefault("OMNIVOICE_MODEL", "test")
 os.environ.setdefault("OMNIVOICE_DISABLE_FILE_LOG", "1")
 
 import pytest
+from starlette.websockets import WebSocketDisconnect
 
 
 @pytest.fixture
@@ -163,6 +164,16 @@ def test_wrong_key_401(key_env):
     assert r.status_code == 401
 
 
+def test_non_ascii_invalid_key_fails_closed_instead_of_raising(key_env):
+    response = _client().get(
+        "/v1/audio/voices",
+        params={"api_key": "clé-incorrecte"},
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "API key required"}
+
+
 def test_shell_paths_served_without_key(key_env):
     c = _client()
     assert c.get("/health").status_code == 200
@@ -178,9 +189,10 @@ def test_middleware_is_plain_asgi():
 def test_ws_handshake_rejected_without_key(key_env):
     """A non-loopback WS handshake without the key is closed, not accepted."""
     c = _client()
-    with pytest.raises(Exception):
+    with pytest.raises(WebSocketDisconnect) as exc_info:
         with c.websocket_connect("/ws/transcribe"):
             pass
+    assert exc_info.value.code == 1008
 
 
 def test_ws_handshake_accepted_with_query_key(key_env):
@@ -211,9 +223,10 @@ def test_ws_session_cookie_rejects_missing_or_wrong_origin(key_env):
     for headers in ({}, {"Origin": "http://testserver.evil.test"}, {"Origin": "null"}):
         c = _client()
         c.cookies.set("ov_session", session.token)
-        with pytest.raises(Exception):
+        with pytest.raises(WebSocketDisconnect) as exc_info:
             with c.websocket_connect("/ws/transcribe", headers=headers):
                 pass
+        assert exc_info.value.code == 1008
 
 
 def test_ws_ticket_is_path_bound_single_use_and_origin_checked(key_env):
@@ -233,12 +246,13 @@ def test_ws_ticket_is_path_bound_single_use_and_origin_checked(key_env):
     ) as ws:
         ws.close()
 
-    with pytest.raises(Exception):
+    with pytest.raises(WebSocketDisconnect) as exc_info:
         with _client().websocket_connect(
             url,
             headers={"Origin": "http://testserver"},
         ):
             pass
+    assert exc_info.value.code == 1008
 
 
 def test_ws_ticket_wrong_path_consumes_ticket(key_env):
@@ -252,18 +266,20 @@ def test_ws_ticket_wrong_path_consumes_ticket(key_env):
     )
     query = f"?ws_ticket={ticket.token}"
 
-    with pytest.raises(Exception):
+    with pytest.raises(WebSocketDisconnect) as wrong_path:
         with _client().websocket_connect(
             "/ws/transcribe" + query,
             headers={"Origin": "http://testserver"},
         ):
             pass
-    with pytest.raises(Exception):
+    assert wrong_path.value.code == 1008
+    with pytest.raises(WebSocketDisconnect) as reused:
         with _client().websocket_connect(
             "/ws/events" + query,
             headers={"Origin": "http://testserver"},
         ):
             pass
+    assert reused.value.code == 1008
 
 
 def test_ws_ticket_rejects_untrusted_origin(key_env):
@@ -276,9 +292,10 @@ def test_ws_ticket_rejects_untrusted_origin(key_env):
         key_env,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(WebSocketDisconnect) as exc_info:
         with _client().websocket_connect(
             f"/ws/transcribe?ws_ticket={ticket.token}",
             headers={"Origin": "http://evil.test"},
         ):
             pass
+    assert exc_info.value.code == 1008

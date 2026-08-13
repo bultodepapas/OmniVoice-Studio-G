@@ -477,7 +477,7 @@ describe('short-lived admin session client', () => {
       }),
     ).rejects.toBeInstanceOf(AuthSessionError);
 
-    expect(getAdminSession('https://gpu.test:3900')).toBeNull();
+    expect(getAdminSession('https://gpu.test:3900', { now: () => NOW_SECONDS * 1000 })).toBeNull();
     expect(windowLike.dispatchEvent).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'ov:auth-required' }),
     );

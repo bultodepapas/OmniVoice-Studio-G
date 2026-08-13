@@ -41,6 +41,15 @@ def test_non_loopback_with_valid_pin_passes():
     assert r.status_code != 401
 
 
+def test_non_ascii_invalid_pin_fails_closed_instead_of_raising():
+    c = TestClient(_app_with_pin("654321"), client=("10.0.0.5", 1))
+
+    response = c.get("/api/voices", params={"pin": "clé-incorrecte"})
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "PIN required"}
+
+
 def test_spa_shell_served_without_pin():
     c = TestClient(_app_with_pin(), client=("10.0.0.5", 1))
     assert c.get("/health").status_code == 200

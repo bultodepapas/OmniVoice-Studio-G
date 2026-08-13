@@ -472,10 +472,11 @@ def test_is_local_host_unwraps_ipv4_mapped_ipv6(monkeypatch):
     assert is_local_host("::ffff:8.8.8.8") is False
 
 
-def test_side_effectful_get_cookie_session_requires_same_origin_csrf(monkeypatch):
+def test_side_effectful_get_cookie_session_requires_same_origin_csrf(monkeypatch, request):
     from services.admin_sessions import admin_session_store
 
     admin_session_store.clear()
+    request.addfinalizer(admin_session_store.clear)
     monkeypatch.setenv("OMNIVOICE_SERVER_MODE", "1")
     monkeypatch.setenv("OMNIVOICE_API_KEY", "s3cret")
     session = admin_session_store.issue("s3cret")
@@ -502,4 +503,3 @@ def test_side_effectful_get_cookie_session_requires_same_origin_csrf(monkeypatch
     )
     allowed.url = SimpleNamespace(scheme="http", netloc="voice.test")
     require_admin_action(allowed)
-    admin_session_store.clear()

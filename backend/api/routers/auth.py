@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import math
+import threading
+import time
+from collections import OrderedDict, deque
+from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -28,6 +33,60 @@ from services.admin_sessions import (
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+_FAILED_EXCHANGE_LIMIT = 10
+_FAILED_EXCHANGE_WINDOW_SECONDS = 60
+_MAX_TRACKED_CLIENTS = 1024
+
+
+class _ExchangeAttemptLimiter:
+    """Bounded per-client sliding window for failed pre-auth exchanges."""
+
+    def __init__(
+        self,
+        *,
+        monotonic: Callable[[], float] = time.monotonic,
+        limit: int = _FAILED_EXCHANGE_LIMIT,
+        window_seconds: int = _FAILED_EXCHANGE_WINDOW_SECONDS,
+        max_clients: int = _MAX_TRACKED_CLIENTS,
+    ) -> None:
+        if limit <= 0 or window_seconds <= 0 or max_clients <= 0:
+            raise ValueError("rate-limit bounds must be positive")
+        self._monotonic = monotonic
+        self._limit = limit
+        self._window_seconds = window_seconds
+        self._max_clients = max_clients
+        self._attempts: OrderedDict[str, deque[float]] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def register_failure(self, client_id: str) -> int | None:
+        now = self._monotonic()
+        cutoff = now - self._window_seconds
+        with self._lock:
+            failures = self._attempts.setdefault(client_id, deque())
+            while failures and failures[0] <= cutoff:
+                failures.popleft()
+            self._attempts.move_to_end(client_id)
+            while len(self._attempts) > self._max_clients:
+                self._attempts.popitem(last=False)
+            if len(failures) >= self._limit:
+                return max(
+                    1,
+                    math.ceil(self._window_seconds - (now - failures[0])),
+                )
+            failures.append(now)
+            return None
+
+    def clear(self, client_id: str) -> None:
+        with self._lock:
+            self._attempts.pop(client_id, None)
+
+    def reset(self) -> None:
+        with self._lock:
+            self._attempts.clear()
+
+
+_exchange_attempt_limiter = _ExchangeAttemptLimiter()
+
 
 class SessionRequest(BaseModel):
     transport: Literal["cookie", "bearer"]
@@ -48,7 +107,7 @@ def _set_session_cookie(response: Response, request: Request, token: str, expire
         "ov_session",
         token,
         max_age=SESSION_TTL_SECONDS,
-        expires=datetime.fromtimestamp(expires_at, tz=timezone.utc),
+        expires=datetime.fromtimestamp(expires_at, tz=UTC),
         path="/",
         secure=_secure_cookie(request),
         httponly=True,
@@ -66,6 +125,22 @@ def _expire_cookie(response: Response, request: Request, name: str) -> None:
     )
 
 
+def _client_id(request: Request) -> str:
+    host = request.client.host if request.client else "unknown"
+    return str(host).strip().lower()[:255] or "unknown"
+
+
+def _reject_master_exchange(request: Request) -> None:
+    retry_after = _exchange_attempt_limiter.register_failure(_client_id(request))
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many authentication attempts",
+            headers={"Retry-After": str(retry_after)},
+        )
+    raise HTTPException(status_code=401, detail="API key required")
+
+
 @router.post("/session")
 def create_session(payload: SessionRequest, request: Request) -> Response:
     configured = remote_api_key()
@@ -79,14 +154,15 @@ def create_session(payload: SessionRequest, request: Request) -> Response:
 
     if authorization_present:
         if not header_authorized:
-            raise HTTPException(status_code=401, detail="API key required")
+            _reject_master_exchange(request)
     elif legacy_authorized:
         if payload.transport != "cookie" or not cookie_csrf_allowed(request):
             raise HTTPException(status_code=403, detail="browser origin rejected")
         migrating_legacy = True
     else:
-        raise HTTPException(status_code=401, detail="API key required")
+        _reject_master_exchange(request)
 
+    _exchange_attempt_limiter.clear(_client_id(request))
     issued = admin_session_store.issue(configured)
     if payload.transport == "bearer":
         return JSONResponse(

@@ -2,11 +2,28 @@
 
 from __future__ import annotations
 
+import importlib
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 
 import pytest
 
-from core.csrf import cookie_csrf_allowed, origin_allowed
+if TYPE_CHECKING:
+    from core.csrf import cookie_csrf_allowed, origin_allowed
+
+
+@pytest.fixture(autouse=True)
+def _resolve_active_csrf_module():
+    """Bind the active app module after any sys.modules test isolation."""
+    module = importlib.import_module("core.csrf")
+    globals()["cookie_csrf_allowed"] = module.cookie_csrf_allowed
+    globals()["origin_allowed"] = module.origin_allowed
+
+
+@pytest.fixture(autouse=True)
+def _clean_origin_environment(monkeypatch):
+    monkeypatch.delenv("OMNIVOICE_ALLOWED_ORIGINS", raising=False)
+    monkeypatch.delenv("OMNIVOICE_UI_PORT", raising=False)
 
 
 def _connection(

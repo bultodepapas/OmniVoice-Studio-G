@@ -8,7 +8,7 @@ from urllib.parse import SplitResult, urlsplit
 
 CSRF_HEADER = "x-voicestudio-csrf"
 CSRF_VALUE = "1"
-_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+SAFE_HTTP_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
 
 def _origin_tuple(value: str | None) -> tuple[str, str, int | None] | None:
@@ -97,7 +97,7 @@ def cookie_csrf_allowed(connection, *, side_effectful_get: bool = False) -> bool
         scope = getattr(connection, "scope", None)
         method = scope.get("method", "GET") if isinstance(scope, dict) else "GET"
     method = str(method).upper()
-    if side_effectful_get or method in _SAFE_METHODS:
+    if side_effectful_get or method in SAFE_HTTP_METHODS:
         fetch_site = headers.get("sec-fetch-site", "") if hasattr(headers, "get") else ""
         return fetch_site == "same-origin"
     return True

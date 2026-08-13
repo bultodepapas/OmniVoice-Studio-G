@@ -6,7 +6,7 @@ import {
   _parseDeepLinkCredentials,
   wsUrl,
 } from './client';
-import { ADMIN_SESSION_STORAGE_KEY } from './authSession';
+import { ADMIN_SESSION_STORAGE_KEY, CSRF_HEADER_NAME } from './authSession';
 
 describe('apiFetch PIN header', () => {
   let realFetch: typeof globalThis.fetch;
@@ -145,7 +145,7 @@ describe('apiFetch short-lived admin authentication', () => {
     expect(target).toBe('https://voice.example.evil.test/public.wav');
     expect(headers.get('Authorization')).toBeNull();
     expect(headers.get('X-OmniVoice-Pin')).toBeNull();
-    expect(headers.get('X-VoiceStudio-CSRF')).toBeNull();
+    expect(headers.get(CSRF_HEADER_NAME)).toBeNull();
     expect(headers.get('X-Public-Media')).toBe('1');
     expect(init?.credentials).toBe('omit');
   });

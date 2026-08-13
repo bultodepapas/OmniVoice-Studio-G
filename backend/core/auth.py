@@ -7,16 +7,16 @@ middleware and route guards cannot disagree about credential precedence.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import Enum
 import ipaddress
+import importlib
 import os
 import secrets
-from typing import Mapping
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from enum import Enum
 
 from services.admin_sessions import (
     AdminSessionStore,
-    admin_session_store,
 )
 
 
@@ -69,6 +69,22 @@ class _CredentialCandidate:
 def remote_api_key() -> str | None:
     """Normalized remote operator key, read dynamically for rotation support."""
     return os.environ.get("OMNIVOICE_API_KEY", "").strip() or None
+
+
+def credential_matches(supplied: str | None, configured: str | None) -> bool:
+    """Constant-time credential comparison that accepts the full Unicode range."""
+    if not supplied or not configured:
+        return False
+    return secrets.compare_digest(
+        supplied.encode("utf-8", errors="surrogatepass"),
+        configured.encode("utf-8", errors="surrogatepass"),
+    )
+
+
+def _active_admin_session_store() -> AdminSessionStore:
+    """Resolve mutable process state at call time so app reloads cannot split it."""
+    module = importlib.import_module("services.admin_sessions")
+    return module.admin_session_store
 
 
 def _trusted_networks() -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
@@ -132,6 +148,21 @@ def _path(connection) -> str:
     return str(getattr(connection, "url", "") or "")
 
 
+def _canonical_websocket_path(connection) -> str:
+    """Remove only the ASGI-configured deployment prefix from a WS path."""
+    path = _path(connection)
+    scope = getattr(connection, "scope", None)
+    if not isinstance(scope, dict):
+        return path
+    root_path = str(scope.get("root_path", "") or "").rstrip("/")
+    if not root_path or root_path == "/":
+        return path
+    root_path = "/" + root_path.lstrip("/")
+    if path.startswith(root_path + "/"):
+        return path[len(root_path) :]
+    return path
+
+
 def _client_host(connection) -> str | None:
     client = getattr(connection, "client", None)
     if client is not None:
@@ -143,7 +174,6 @@ def _client_host(connection) -> str | None:
 
 
 def _credential_candidate(connection) -> _CredentialCandidate | None:
-    headers = getattr(connection, "headers", None) or {}
     query = getattr(connection, "query_params", None) or {}
     cookies = getattr(connection, "cookies", None) or {}
 
@@ -242,13 +272,13 @@ def legacy_master_cookie_valid(connection) -> bool:
     configured = remote_api_key()
     cookies = getattr(connection, "cookies", None) or {}
     supplied = _mapping_get(cookies, "ov_key").strip()
-    return bool(configured and supplied and secrets.compare_digest(supplied, configured))
+    return credential_matches(supplied, configured)
 
 
 def master_header_valid(connection) -> bool:
     configured = remote_api_key()
     supplied = bearer_header_value(connection)
-    return bool(configured and supplied and secrets.compare_digest(supplied, configured))
+    return credential_matches(supplied, configured)
 
 
 def _configured_pin(connection) -> str | None:
@@ -271,7 +301,7 @@ def _valid_pin(connection) -> bool:
         or _mapping_get(query, "pin").strip()
         or _mapping_get(cookies, "ov_pin").strip()
     )
-    return bool(supplied and secrets.compare_digest(supplied, configured))
+    return credential_matches(supplied, configured)
 
 
 def _attached_principal(connection) -> AuthPrincipal | None:
@@ -297,12 +327,14 @@ def _attach_principal(connection, principal: AuthPrincipal) -> AuthPrincipal:
 def resolve_principal(
     connection,
     *,
-    store: AdminSessionStore = admin_session_store,
+    store: AdminSessionStore | None = None,
 ) -> AuthPrincipal:
     """Resolve and attach the single authentication decision for one scope."""
     attached = _attached_principal(connection)
     if attached is not None:
         return attached
+    if store is None:
+        store = _active_admin_session_store()
 
     host = _client_host(connection)
     if is_loopback(host):
@@ -317,8 +349,7 @@ def resolve_principal(
         principal: AuthPrincipal | None = None
         if (
             candidate.allow_master
-            and configured_key
-            and secrets.compare_digest(candidate.value, configured_key)
+            and credential_matches(candidate.value, configured_key)
         ):
             principal = AuthPrincipal(
                 PrincipalKind.API_KEY,
@@ -336,7 +367,11 @@ def resolve_principal(
                     transport=candidate.transport,
                 )
         elif candidate.allow_ticket:
-            session = store.consume_ws_ticket(candidate.value, _path(connection), configured_key)
+            session = store.consume_ws_ticket(
+                candidate.value,
+                _canonical_websocket_path(connection),
+                configured_key,
+            )
             if session is not None:
                 principal = AuthPrincipal(
                     PrincipalKind.ADMIN_SESSION,
@@ -381,6 +416,6 @@ def resolve_principal(
 def principal_for(
     connection,
     *,
-    store: AdminSessionStore = admin_session_store,
+    store: AdminSessionStore | None = None,
 ) -> AuthPrincipal:
     return _attached_principal(connection) or resolve_principal(connection, store=store)

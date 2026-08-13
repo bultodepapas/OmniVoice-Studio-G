@@ -7,15 +7,15 @@ depending on FastAPI or persisting a verifier to disk.
 
 from __future__ import annotations
 
-from base64 import urlsafe_b64encode
-from collections import OrderedDict
-from dataclasses import dataclass, field
 import hmac
 import re
 import secrets
 import threading
 import time
-from typing import Callable
+from base64 import urlsafe_b64encode
+from collections import OrderedDict
+from collections.abc import Callable
+from dataclasses import dataclass, field
 
 
 SESSION_TTL_SECONDS = 8 * 60 * 60
@@ -135,6 +135,10 @@ class AdminSessionStore:
         return api_key.strip() if isinstance(api_key, str) else ""
 
     def _generation(self, api_key: str) -> bytes:
+        # The high-entropy operator key is the HMAC message for a process-local
+        # rotation marker, not a stored password verifier; a slow KDF on every
+        # request would add cost without improving resistance to guessing.
+        # codeql[py/weak-sensitive-data-hashing]
         return hmac.digest(self._pepper, api_key.encode("utf-8"), "sha256")
 
     def _sync_key_locked(self, api_key: str | None) -> bool:

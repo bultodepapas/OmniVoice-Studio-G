@@ -29,10 +29,9 @@ from core.auth import (
     principal_for,
     remote_api_key,
 )
-from core.csrf import cookie_csrf_allowed
+from core.csrf import SAFE_HTTP_METHODS, cookie_csrf_allowed
 
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
-_READ_ONLY_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
 
 def _server_mode() -> bool:
@@ -99,7 +98,7 @@ def _request_presents_admin_credential(
     }:
         return True
     method = str(getattr(request, "method", "GET")).upper()
-    if side_effectful_get or method not in _READ_ONLY_METHODS:
+    if side_effectful_get or method not in SAFE_HTTP_METHODS:
         return cookie_csrf_allowed(
             request,
             side_effectful_get=side_effectful_get,
@@ -145,7 +144,7 @@ def require_loopback(request: Request) -> None:
         return
     if _server_mode():
         method = str(getattr(request, "method", "GET")).upper()
-        if method not in _READ_ONLY_METHODS:
+        if method not in SAFE_HTTP_METHODS:
             # Defense in depth. Privileged routers should declare
             # ``require_admin`` directly, but a missed migration must not turn
             # into an unauthenticated Docker write primitive.
@@ -176,7 +175,7 @@ def require_admin(request: Request) -> None:
         return
     if _server_mode():
         method = str(getattr(request, "method", "GET")).upper()
-        read_only = method in _READ_ONLY_METHODS
+        read_only = method in SAFE_HTTP_METHODS
         if read_only and not _admin_credential_configured(request):
             return
         if _request_presents_admin_credential(request):

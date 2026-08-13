@@ -45,8 +45,11 @@ test('same-origin production bootstrap exchanges once into an HttpOnly cookie', 
   expect([...snapshot.localValues, ...snapshot.sessionValues].join('\n')).not.toContain(MASTER);
   expect(seen.map((request) => request.url()).join('\n')).not.toContain(MASTER);
 
-  const cookie = (await context.cookies()).find(({ name }) => name === 'ov_session');
+  const cookies = await context.cookies();
+  const cookie = cookies.find(({ name }) => name === 'ov_session');
   expect(cookie).toMatchObject({ value: SESSION, httpOnly: true, sameSite: 'Strict', path: '/' });
+  expect(cookies.some(({ name }) => name === 'ov_key')).toBe(false);
+  expect(cookies.map(({ value }) => value).join('\n')).not.toContain(MASTER);
 });
 
 test('cross-origin production bootstrap stores only a backend-bound tab session', async ({

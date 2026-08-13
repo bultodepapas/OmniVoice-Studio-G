@@ -30,13 +30,13 @@ describe('administrator credential hygiene static guard', () => {
   it('has no production path that durably writes the legacy master key', () => {
     const violations = sources()
       .filter(({ source }) =>
-        /localStorage\.setItem\(\s*(?:LS_API_KEY|LEGACY_API_KEY_STORAGE_KEY|['"]ov_api_key['"])/.test(
+        /(?:localStorage|sessionStorage)\.setItem\(\s*(?:LS_API_KEY|LEGACY_API_KEY_STORAGE_KEY|['"]ov_api_key['"])/.test(
           source,
         ),
       )
       .map(({ file }) => file);
 
-    expect(violations, 'OMNIVOICE_API_KEY must never enter localStorage').toEqual([]);
+    expect(violations, 'OMNIVOICE_API_KEY must never enter browser storage').toEqual([]);
   });
 
   it('has no production WebSocket query builder for a master API key', () => {

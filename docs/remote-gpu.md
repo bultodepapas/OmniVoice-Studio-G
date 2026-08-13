@@ -80,6 +80,11 @@ Serve terminates on the node and forwards from `127.0.0.1`, so to the backend
 the request looks like loopback — which is why the **API key is still
 required** in that path (the bearer gate doesn't rely on the source address
 for non-local exposure; set the key and it always applies to keyed clients).
+Uvicorn trusts proxy headers from loopback by default, so Serve's forwarded
+HTTPS scheme becomes the authoritative ASGI scheme and browser session cookies
+receive `Secure`. For a non-loopback reverse proxy, explicitly configure
+Uvicorn's `--forwarded-allow-ips=<proxy-ip>`; the application never trusts an
+arbitrary `X-Forwarded-Proto` header itself.
 
 > **Do not use `tailscale funnel`** (public-internet exposure) for this. Even
 > with a key, a voice-cloning backend should not be on the open internet.

@@ -4,19 +4,37 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 import hmac
+import importlib
+from typing import TYPE_CHECKING
 
 import pytest
 
-from services.admin_sessions import (
-    ADMIN_SESSION_PREFIX,
-    SESSION_TTL_SECONDS,
-    WS_TICKET_PREFIX,
-    WS_TICKET_TTL_SECONDS,
-    AdminSessionStore,
-)
+if TYPE_CHECKING:
+    from services.admin_sessions import (
+        ADMIN_SESSION_PREFIX,
+        SESSION_TTL_SECONDS,
+        WS_TICKET_PREFIX,
+        WS_TICKET_TTL_SECONDS,
+        AdminSessionStore,
+    )
 
 
 MASTER = "MASTER_DO_NOT_LEAK_7d29"
+_SESSION_TOKEN_PREFIX = "ovs_admin_session_"
+_SESSION_SYMBOLS = (
+    "ADMIN_SESSION_PREFIX",
+    "SESSION_TTL_SECONDS",
+    "WS_TICKET_PREFIX",
+    "WS_TICKET_TTL_SECONDS",
+    "AdminSessionStore",
+)
+
+
+@pytest.fixture(autouse=True)
+def _resolve_active_session_module():
+    """Bind the active app module after any sys.modules test isolation."""
+    module = importlib.import_module("services.admin_sessions")
+    globals().update({name: getattr(module, name) for name in _SESSION_SYMBOLS})
 
 
 class FakeClock:
@@ -41,7 +59,7 @@ def clock() -> FakeClock:
 
 
 @pytest.fixture
-def store(clock: FakeClock) -> AdminSessionStore:
+def store(clock: FakeClock, _resolve_active_session_module) -> AdminSessionStore:
     return AdminSessionStore(
         monotonic=clock.monotonic,
         wall_time=clock.wall,
@@ -242,10 +260,10 @@ def test_session_capacity_eviction_removes_its_outstanding_tickets(clock: FakeCl
         "",
         "   ",
         "not-a-session",
-        ADMIN_SESSION_PREFIX + "a" * 42,
-        ADMIN_SESSION_PREFIX + "a" * 44,
-        ADMIN_SESSION_PREFIX + "!" * 43,
-        ADMIN_SESSION_PREFIX + "a" * 5_000,
+        _SESSION_TOKEN_PREFIX + "a" * 42,
+        _SESSION_TOKEN_PREFIX + "a" * 44,
+        _SESSION_TOKEN_PREFIX + "!" * 43,
+        _SESSION_TOKEN_PREFIX + "a" * 5_000,
         None,
     ],
 )
