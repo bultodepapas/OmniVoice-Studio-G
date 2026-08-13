@@ -1,0 +1,126 @@
+"""Exact-origin policy for ambient browser administrator credentials."""
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+import pytest
+
+from core.csrf import cookie_csrf_allowed, origin_allowed
+
+
+def _connection(
+    *,
+    origin: str | None = "https://voice.test",
+    destination: str = "https://voice.test",
+    method: str = "POST",
+    marker: str | None = "1",
+    fetch_site: str | None = None,
+):
+    target = destination.split("://", 1)
+    headers: dict[str, str] = {}
+    if origin is not None:
+        headers["origin"] = origin
+    if marker is not None:
+        headers["x-voicestudio-csrf"] = marker
+    if fetch_site is not None:
+        headers["sec-fetch-site"] = fetch_site
+    return SimpleNamespace(
+        headers=headers,
+        method=method,
+        url=SimpleNamespace(scheme=target[0], netloc=target[1]),
+        scope={"type": "http", "scheme": target[0], "method": method},
+    )
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        None,
+        "",
+        "null",
+        "*",
+        "ftp://voice.test",
+        "https://evil.test",
+        "http://voice.test",
+        "https://voice.test:444",
+        "https://sub.voice.test",
+        "https://voice.test.evil.test",
+        "https://user@voice.test",
+        "https://voice.test/path",
+        "https://voice.test?query=1",
+        "https://voice.test#fragment",
+        "https://voice.test, https://voice.test",
+        "https://voice.test:not-a-port",
+        "not an origin",
+    ],
+)
+def test_destination_origin_rejects_missing_malformed_and_lookalike_values(origin):
+    assert origin_allowed(_connection(origin=origin)) is False
+
+
+@pytest.mark.parametrize(
+    ("origin", "destination"),
+    [
+        ("https://voice.test", "https://voice.test"),
+        ("HTTPS://VOICE.TEST", "https://voice.test:443"),
+        ("http://voice.test", "http://voice.test:80"),
+        ("https://voice.test:7443", "https://voice.test:7443"),
+    ],
+)
+def test_destination_origin_uses_normalized_exact_tuple(origin, destination):
+    assert origin_allowed(_connection(origin=origin, destination=destination)) is True
+
+
+def test_explicit_allowed_origin_is_exact_and_port_bound(monkeypatch):
+    monkeypatch.setenv("OMNIVOICE_ALLOWED_ORIGINS", "https://ui.test:7443")
+
+    assert origin_allowed(_connection(origin="https://ui.test:7443")) is True
+    assert origin_allowed(_connection(origin="https://ui.test")) is False
+    assert origin_allowed(_connection(origin="https://ui.test.evil")) is False
+
+
+def test_default_tauri_origins_are_allowed():
+    assert origin_allowed(_connection(origin="tauri://localhost")) is True
+    assert origin_allowed(_connection(origin="http://tauri.localhost")) is True
+
+
+def test_invalid_ui_port_falls_back_to_the_default_allowlist(monkeypatch):
+    monkeypatch.setenv("OMNIVOICE_UI_PORT", "not-a-port")
+    monkeypatch.delenv("OMNIVOICE_ALLOWED_ORIGINS", raising=False)
+
+    assert origin_allowed(_connection(origin="http://localhost:3901")) is True
+
+
+def test_destination_origin_falls_back_to_asgi_scope_and_host_header():
+    connection = _connection(origin="https://voice.test")
+    del connection.url
+    connection.headers["host"] = "voice.test"
+    connection.scope["scheme"] = "https"
+
+    assert origin_allowed(connection) is True
+
+
+@pytest.mark.parametrize(
+    ("marker", "origin"),
+    [(None, "https://voice.test"), ("", "https://voice.test"), ("0", "https://voice.test"), ("1", None)],
+)
+def test_cookie_mutation_requires_marker_and_exact_origin(marker, origin):
+    assert cookie_csrf_allowed(_connection(marker=marker, origin=origin)) is False
+
+
+def test_cookie_mutation_accepts_exact_origin_and_marker():
+    assert cookie_csrf_allowed(_connection()) is True
+
+
+@pytest.mark.parametrize("fetch_site", [None, "", "cross-site", "same-site", "none"])
+def test_side_effectful_get_requires_browser_same_origin_signal(fetch_site):
+    connection = _connection(method="GET", fetch_site=fetch_site)
+
+    assert cookie_csrf_allowed(connection, side_effectful_get=True) is False
+
+
+def test_side_effectful_get_accepts_all_three_browser_proofs():
+    connection = _connection(method="GET", fetch_site="same-origin")
+
+    assert cookie_csrf_allowed(connection, side_effectful_get=True) is True
