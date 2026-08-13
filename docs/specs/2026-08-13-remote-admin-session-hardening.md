@@ -235,6 +235,9 @@ Design constraints:
   cookie `Expires` metadata.
 - Keep at most 256 live sessions and 512 live tickets. Purge expired entries
   before deterministic oldest-first eviction.
+- Keep fixed-TTL credentials in expiry order and maintain a hash-only reverse
+  ticket index per session. Routine validation must not scan every live
+  credential, and every removal path must update both indexes atomically.
 - Protect mutation and ticket redemption with one lock. Ticket validation and
   deletion must be atomic.
 - Track the current API-key generation with domain-separated HKDF-SHA-256 using

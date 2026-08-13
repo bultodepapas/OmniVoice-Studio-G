@@ -53,6 +53,19 @@ class FakeClock:
         self.wall_value += seconds
 
 
+class _ExpiryReadProbe:
+    """Count expiry reads while preserving the wrapped record's behavior."""
+
+    def __init__(self, record, counter: list[int]) -> None:
+        self._record = record
+        self._counter = counter
+
+    def __getattr__(self, name: str):
+        if name == "expires_monotonic":
+            self._counter[0] += 1
+        return getattr(self._record, name)
+
+
 @pytest.fixture
 def clock() -> FakeClock:
     return FakeClock()
@@ -65,6 +78,14 @@ def store(clock: FakeClock, _resolve_active_session_module) -> AdminSessionStore
         wall_time=clock.wall,
         pepper=b"p" * 32,
     )
+
+
+def _assert_ticket_index_consistent(store: AdminSessionStore) -> None:
+    expected: dict[str, set[str]] = {}
+    for ticket_hash, ticket in store._tickets.items():
+        expected.setdefault(ticket.session_hash, set()).add(ticket_hash)
+    assert store._ticket_hashes_by_session == expected
+    assert set(expected).issubset(store._sessions)
 
 
 @pytest.mark.parametrize(
@@ -240,6 +261,63 @@ def test_capacity_evicts_oldest_live_session_deterministically(clock: FakeClock)
     assert store.resolve(newest.token, MASTER) is not None
 
 
+def test_resolve_does_not_scan_every_live_credential(store: AdminSessionStore):
+    sessions = [store.issue(MASTER) for _ in range(64)]
+    for _ in range(128):
+        store.issue_ws_ticket(sessions[-1].token, "/ws/events", MASTER)
+
+    session_reads = [0]
+    ticket_reads = [0]
+    for token_hash, record in tuple(store._sessions.items()):
+        store._sessions[token_hash] = _ExpiryReadProbe(record, session_reads)
+    for token_hash, ticket in tuple(store._tickets.items()):
+        store._tickets[token_hash] = _ExpiryReadProbe(ticket, ticket_reads)
+
+    assert store.resolve(sessions[-1].token, MASTER) is not None
+    # One read checks the oldest expiry; a second validates the requested
+    # session. The number of reads must not grow with store occupancy.
+    assert session_reads[0] <= 2
+    assert ticket_reads[0] <= 1
+
+
+def test_ticket_index_stays_consistent_across_mixed_removals(clock: FakeClock):
+    store = AdminSessionStore(
+        monotonic=clock.monotonic,
+        wall_time=clock.wall,
+        pepper=b"p" * 32,
+        session_ttl_seconds=10,
+        ws_ticket_ttl_seconds=30,
+        max_sessions=2,
+        max_tickets=3,
+    )
+    first = store.issue(MASTER)
+    store.issue_ws_ticket(first.token, "/ws/events", MASTER)
+    second = store.issue(MASTER)
+    second_ticket = store.issue_ws_ticket(second.token, "/ws/events", MASTER)
+    _assert_ticket_index_consistent(store)
+
+    third = store.issue(MASTER)  # capacity eviction removes first and its ticket
+    _assert_ticket_index_consistent(store)
+
+    assert store.consume_ws_ticket(second_ticket.token, "/ws/transcribe", MASTER) is None
+    store.issue_ws_ticket(third.token, "/ws/events", MASTER)
+    _assert_ticket_index_consistent(store)
+
+    clock.advance(10)
+    assert store.debug_snapshot() == {"sessions": 0, "ws_tickets": 0}
+    _assert_ticket_index_consistent(store)
+
+    replacement = store.issue(MASTER)
+    store.issue_ws_ticket(replacement.token, "/ws/events", MASTER)
+    assert store.resolve(replacement.token, "ROTATED_MASTER") is None
+    _assert_ticket_index_consistent(store)
+
+    final = store.issue(MASTER)
+    store.issue_ws_ticket(final.token, "/ws/events", MASTER)
+    store.clear()
+    _assert_ticket_index_consistent(store)
+
+
 def test_session_capacity_eviction_removes_its_outstanding_tickets(clock: FakeClock):
     store = AdminSessionStore(
         monotonic=clock.monotonic,
@@ -251,6 +329,7 @@ def test_session_capacity_eviction_removes_its_outstanding_tickets(clock: FakeCl
 
     store.issue(MASTER)
 
+    _assert_ticket_index_consistent(store)
     assert store.consume_ws_ticket(ticket.token, "/ws/events", MASTER) is None
 
 
@@ -370,6 +449,7 @@ def test_revoking_session_invalidates_its_outstanding_tickets(store: AdminSessio
     ticket = store.issue_ws_ticket(session.token, "/ws/events", MASTER)
     store.revoke(session.token)
 
+    _assert_ticket_index_consistent(store)
     assert store.consume_ws_ticket(ticket.token, "/ws/events", MASTER) is None
 
 
@@ -380,6 +460,7 @@ def test_revoking_by_credential_invalidates_outstanding_tickets(store: AdminSess
 
     assert record is not None
     assert store.revoke_by_credential(record.credential_id) is True
+    _assert_ticket_index_consistent(store)
     assert store.consume_ws_ticket(ticket.token, "/ws/events", MASTER) is None
 
 
@@ -417,9 +498,11 @@ def test_ticket_capacity_is_bounded(clock: FakeClock):
     clock.advance(1)
     newest = store.issue_ws_ticket(session.token, "/ws/events", MASTER)
 
+    _assert_ticket_index_consistent(store)
     assert store.consume_ws_ticket(oldest.token, "/ws/events", MASTER) is None
     assert store.consume_ws_ticket(middle.token, "/ws/events", MASTER) is not None
     assert store.consume_ws_ticket(newest.token, "/ws/events", MASTER) is not None
+    _assert_ticket_index_consistent(store)
 
 
 def test_repr_and_debug_snapshot_contain_no_raw_credentials(store: AdminSessionStore):

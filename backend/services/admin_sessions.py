@@ -126,6 +126,7 @@ class AdminSessionStore:
         self._max_tickets = max_tickets
         self._sessions: OrderedDict[str, _StoredSession] = OrderedDict()
         self._tickets: OrderedDict[str, _StoredTicket] = OrderedDict()
+        self._ticket_hashes_by_session: dict[str, set[str]] = {}
         self._key_generation: bytes | None = None
         self._lock = threading.RLock()
 
@@ -151,8 +152,7 @@ class AdminSessionStore:
     def _sync_key_locked(self, api_key: str | None) -> bool:
         normalized = self._normalize_master(api_key)
         if not normalized:
-            self._sessions.clear()
-            self._tickets.clear()
+            self._clear_credentials_locked()
             self._key_generation = None
             return False
         generation = self._generation(normalized)
@@ -160,8 +160,7 @@ class AdminSessionStore:
             self._key_generation = generation
             return True
         if not hmac.compare_digest(self._key_generation, generation):
-            self._sessions.clear()
-            self._tickets.clear()
+            self._clear_credentials_locked()
             self._key_generation = generation
         return True
 
@@ -182,33 +181,54 @@ class AdminSessionStore:
                 return token, token_hash
         raise RuntimeError("credential token source produced repeated collisions")
 
-    def _purge_locked(self, now: float) -> None:
-        expired_sessions = [
-            token_hash
-            for token_hash, record in self._sessions.items()
-            if now >= record.expires_monotonic
-        ]
-        for token_hash in expired_sessions:
-            self._sessions.pop(token_hash, None)
+    def _clear_credentials_locked(self) -> None:
+        self._sessions.clear()
+        self._tickets.clear()
+        self._ticket_hashes_by_session.clear()
 
-        expired_tickets = [
-            token_hash
-            for token_hash, ticket in self._tickets.items()
-            if now >= ticket.expires_monotonic or ticket.session_hash not in self._sessions
-        ]
-        for token_hash in expired_tickets:
-            self._tickets.pop(token_hash, None)
+    def _remove_ticket_locked(self, ticket_hash: str) -> _StoredTicket | None:
+        ticket = self._tickets.pop(ticket_hash, None)
+        if ticket is None:
+            return None
+        session_tickets = self._ticket_hashes_by_session.get(ticket.session_hash)
+        if session_tickets is not None:
+            session_tickets.discard(ticket_hash)
+            if not session_tickets:
+                self._ticket_hashes_by_session.pop(ticket.session_hash, None)
+        return ticket
+
+    def _remove_session_locked(self, session_hash: str) -> _StoredSession | None:
+        record = self._sessions.pop(session_hash, None)
+        for ticket_hash in tuple(self._ticket_hashes_by_session.get(session_hash, ())):
+            self._remove_ticket_locked(ticket_hash)
+        # Defensive cleanup keeps a prior partial mutation from preserving a
+        # dangling reverse-index bucket even when the session was already gone.
+        self._ticket_hashes_by_session.pop(session_hash, None)
+        return record
+
+    def _purge_locked(self, now: float) -> None:
+        # TTLs are fixed per store and monotonic issue times never decrease, so
+        # insertion order is expiry order. Only the expired prefix can require
+        # work; the common request path examines at most one record per type.
+        while self._sessions:
+            session_hash = next(iter(self._sessions))
+            if now < self._sessions[session_hash].expires_monotonic:
+                break
+            self._remove_session_locked(session_hash)
+
+        while self._tickets:
+            ticket_hash = next(iter(self._tickets))
+            if now < self._tickets[ticket_hash].expires_monotonic:
+                break
+            self._remove_ticket_locked(ticket_hash)
 
     def _evict_sessions_locked(self) -> None:
         while len(self._sessions) >= self._max_sessions:
-            session_hash, _record = self._sessions.popitem(last=False)
-            for ticket_hash, ticket in tuple(self._tickets.items()):
-                if ticket.session_hash == session_hash:
-                    self._tickets.pop(ticket_hash, None)
+            self._remove_session_locked(next(iter(self._sessions)))
 
     def _evict_tickets_locked(self) -> None:
         while len(self._tickets) >= self._max_tickets:
-            self._tickets.popitem(last=False)
+            self._remove_ticket_locked(next(iter(self._tickets)))
 
     def issue(self, api_key: str) -> IssuedSession:
         normalized = self._normalize_master(api_key)
@@ -252,23 +272,13 @@ class AdminSessionStore:
         assert isinstance(token, str)
         token_hash = _hash_token(token, self._pepper)
         with self._lock:
-            removed = self._sessions.pop(token_hash, None) is not None
-            if removed:
-                for ticket_hash, ticket in tuple(self._tickets.items()):
-                    if ticket.session_hash == token_hash:
-                        self._tickets.pop(ticket_hash, None)
-            return removed
+            return self._remove_session_locked(token_hash) is not None
 
     def revoke_by_credential(self, credential_id: str | None) -> bool:
         if not isinstance(credential_id, str) or len(credential_id) != 64:
             return False
         with self._lock:
-            removed = self._sessions.pop(credential_id, None) is not None
-            if removed:
-                for ticket_hash, ticket in tuple(self._tickets.items()):
-                    if ticket.session_hash == credential_id:
-                        self._tickets.pop(ticket_hash, None)
-            return removed
+            return self._remove_session_locked(credential_id) is not None
 
     def issue_ws_ticket(
         self,
@@ -311,6 +321,9 @@ class AdminSessionStore:
                 issued_monotonic=now,
                 expires_monotonic=now + self._ticket_ttl,
             )
+            self._ticket_hashes_by_session.setdefault(credential_id, set()).add(
+                token_hash
+            )
             return IssuedTicket(token=token, expires_at=expires_at)
 
     def consume_ws_ticket(
@@ -327,7 +340,9 @@ class AdminSessionStore:
                 return None
             now = self._monotonic()
             self._purge_locked(now)
-            ticket = self._tickets.pop(_hash_token(ticket_token, self._pepper), None)
+            ticket = self._remove_ticket_locked(
+                _hash_token(ticket_token, self._pepper)
+            )
             if ticket is None or now >= ticket.expires_monotonic or ticket.path != path:
                 return None
             session = self._sessions.get(ticket.session_hash)
@@ -337,8 +352,7 @@ class AdminSessionStore:
 
     def clear(self) -> None:
         with self._lock:
-            self._sessions.clear()
-            self._tickets.clear()
+            self._clear_credentials_locked()
             self._key_generation = None
 
     @property

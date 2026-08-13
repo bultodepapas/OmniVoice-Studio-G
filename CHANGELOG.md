@@ -11,7 +11,7 @@ the frozen-backend fallback mirror it for their toolchains.
 **Highlights**
 
 - Docker/server mode now requires an API key for remote changes and side-effectful admin checks across workers, engines, media tools, MCP, pronunciation, diagnostics, and LLM providers. (#1525)
-- The remote UI now exchanges its administrator key for a short-lived session, keeps masters out of browser storage and WebSocket URLs, and uses one-use WebSocket tickets. (#1528)
+- The remote UI now exchanges its administrator key for a short-lived session, keeps masters out of browser storage and WebSocket URLs, and validates bounded sessions without occupancy-dependent scans. (#1528)
 - The unified Support page no longer throws while opening a section in browsers or test environments without `scrollIntoView`. (#1525)
 - A faster, cleaner Dub workspace for multilingual production (#1489)
 - VoiceStudio now gives the app, desktop chrome, documentation, and package metadata one clear identity
