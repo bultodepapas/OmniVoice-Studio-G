@@ -143,7 +143,8 @@ Use these identifiers in tests and review comments.
    master key only through `Authorization: Bearer`. Query parameters and an
    existing admin session cannot mint or renew sessions.
 5. **AUTH-S5 — Opaque random sessions:** Session tokens contain at least 256 bits
-   from `secrets`; the store retains only SHA-256 hashes.
+   from `secrets`; the store retains only HMAC-SHA-256 indexes keyed by a
+   process-local 256-bit pepper.
 6. **AUTH-S6 — Absolute expiry:** Admin sessions expire after eight hours. There
    is no sliding expiry, refresh token, or implicit renewal.
 7. **AUTH-S7 — Immediate invalidation:** Logout, backend restart, and API-key

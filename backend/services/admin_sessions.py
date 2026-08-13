@@ -10,7 +10,6 @@ from __future__ import annotations
 from base64 import urlsafe_b64encode
 from collections import OrderedDict
 from dataclasses import dataclass, field
-import hashlib
 import hmac
 import re
 import secrets
@@ -33,11 +32,12 @@ _ALLOWED_WS_PATHS = frozenset({"/ws/events", "/ws/transcribe"})
 _ADMIN_CAPABILITIES = frozenset({"consume", "admin"})
 
 
-def _hash_token(token: str) -> str:
-    # These are 256-bit random values, not user-chosen passwords. A fast hash
-    # is the correct storage primitive: there is no feasible dictionary attack
-    # for a password KDF to slow down.
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+def _hash_token(token: str, pepper: bytes) -> str:
+    # These are 256-bit random values, not user-chosen passwords. A keyed,
+    # process-local index is the right primitive: there is no feasible password
+    # dictionary to slow down, and a copied record is unusable without the
+    # store's independently generated pepper.
+    return hmac.digest(pepper, token.encode("utf-8"), "sha256").hex()
 
 
 def _encode_token(raw: bytes) -> str:
@@ -166,7 +166,7 @@ class AdminSessionStore:
             if not isinstance(raw, bytes) or len(raw) != _TOKEN_BYTES:
                 raise RuntimeError("token source must return exactly 32 bytes")
             token = prefix + _encode_token(raw)
-            token_hash = _hash_token(token)
+            token_hash = _hash_token(token, self._pepper)
             if token_hash not in existing:
                 return token, token_hash
         raise RuntimeError("credential token source produced repeated collisions")
@@ -230,7 +230,7 @@ class AdminSessionStore:
                 return None
             now = self._monotonic()
             self._purge_locked(now)
-            record = self._sessions.get(_hash_token(token))
+            record = self._sessions.get(_hash_token(token, self._pepper))
             if record is None or now >= record.expires_monotonic:
                 return None
             return record.public()
@@ -239,7 +239,7 @@ class AdminSessionStore:
         if not self._valid_token(token, ADMIN_SESSION_PREFIX):
             return False
         assert isinstance(token, str)
-        token_hash = _hash_token(token)
+        token_hash = _hash_token(token, self._pepper)
         with self._lock:
             removed = self._sessions.pop(token_hash, None) is not None
             if removed:
@@ -270,7 +270,7 @@ class AdminSessionStore:
         if not self._valid_token(session_token, ADMIN_SESSION_PREFIX):
             raise PermissionError("valid admin session required")
         assert isinstance(session_token, str)
-        session_hash = _hash_token(session_token)
+        session_hash = _hash_token(session_token, self._pepper)
         return self.issue_ws_ticket_for_credential(session_hash, path, api_key)
 
     def issue_ws_ticket_for_credential(
@@ -316,7 +316,7 @@ class AdminSessionStore:
                 return None
             now = self._monotonic()
             self._purge_locked(now)
-            ticket = self._tickets.pop(_hash_token(ticket_token), None)
+            ticket = self._tickets.pop(_hash_token(ticket_token, self._pepper), None)
             if ticket is None or now >= ticket.expires_monotonic or ticket.path != path:
                 return None
             session = self._sessions.get(ticket.session_hash)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-import hashlib
+import hmac
 
 import pytest
 
@@ -107,7 +107,7 @@ def test_issue_returns_a_namespaced_256_bit_token_once(store: AdminSessionStore)
 
 def test_store_retains_only_the_token_hash(store: AdminSessionStore):
     issued = store.issue(MASTER)
-    expected_hash = hashlib.sha256(issued.token.encode("utf-8")).hexdigest()
+    expected_hash = hmac.digest(b"p" * 32, issued.token.encode("utf-8"), "sha256").hex()
 
     assert tuple(store._sessions) == (expected_hash,)
     assert issued.token not in repr(store._sessions)
@@ -120,7 +120,11 @@ def test_resolve_returns_expected_admin_capabilities(store: AdminSessionStore):
     record = store.resolve(issued.token, MASTER)
 
     assert record is not None
-    assert record.credential_id == hashlib.sha256(issued.token.encode()).hexdigest()
+    assert record.credential_id == hmac.digest(
+        b"p" * 32,
+        issued.token.encode(),
+        "sha256",
+    ).hex()
     assert record.capabilities == frozenset({"consume", "admin"})
     assert "native" not in record.capabilities
 
