@@ -23,7 +23,7 @@ from core.auth import (
     principal_for,
     remote_api_key,
 )
-from core.csrf import cookie_csrf_allowed
+from core.csrf import cookie_csrf_allowed, effective_scheme
 from services.admin_sessions import (
     SESSION_TTL_SECONDS,
     WS_TICKET_TTL_SECONDS,
@@ -97,9 +97,14 @@ class WebSocketTicketRequest(BaseModel):
 
 
 def _secure_cookie(request: Request) -> bool:
-    # Do not trust arbitrary X-Forwarded-Proto. Proxy trust must be configured
-    # at the ASGI server boundary; at this layer the resolved scope is authority.
-    return request.url.scheme == "https"
+    # Same effective-scheme logic as the exact-origin CSRF check: the resolved
+    # scope first (uvicorn's trusted-proxy rewrite), upgraded — never
+    # downgraded — by X-Forwarded-Proto for TLS-terminating proxies uvicorn
+    # doesn't trust (Tailscale Serve into Docker, etc.). Spoofing the header on
+    # a plain-http hop can only ADD the Secure flag, which fails safe: the
+    # browser drops such a cookie, so the spoofer only breaks their own
+    # session. See core.csrf.effective_scheme for the full analysis.
+    return effective_scheme(request) == "https"
 
 
 def _set_session_cookie(response: Response, request: Request, token: str, expires_at: float) -> None:

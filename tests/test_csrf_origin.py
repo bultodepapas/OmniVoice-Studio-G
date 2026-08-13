@@ -118,6 +118,57 @@ def test_destination_origin_falls_back_to_asgi_scope_and_host_header():
     assert origin_allowed(connection) is True
 
 
+def test_forwarded_proto_upgrades_destination_scheme_behind_tls_proxy():
+    # Tailscale Serve (docs/remote-gpu.md) and any TLS-terminating proxy:
+    # the browser presents an https Origin while the backend hop is http.
+    connection = _connection(origin="https://gpu.test", destination="http://gpu.test")
+    connection.headers["x-forwarded-proto"] = "https"
+
+    assert origin_allowed(connection) is True
+
+
+def test_forwarded_proto_uses_first_value_of_comma_separated_chain():
+    connection = _connection(origin="https://gpu.test", destination="http://gpu.test")
+    connection.headers["x-forwarded-proto"] = "https, http"
+
+    assert origin_allowed(connection) is True
+
+
+def test_forwarded_proto_upgrades_scope_fallback_path_too():
+    connection = _connection(origin="https://gpu.test", destination="http://gpu.test")
+    del connection.url
+    connection.headers["host"] = "gpu.test"
+    connection.headers["x-forwarded-proto"] = "https"
+
+    assert origin_allowed(connection) is True
+
+
+def test_spoofed_forwarded_proto_does_not_admit_cross_origin():
+    connection = _connection(origin="https://evil.test", destination="http://voice.test")
+    connection.headers["x-forwarded-proto"] = "https"
+
+    assert origin_allowed(connection) is False
+
+
+def test_forwarded_proto_never_downgrades_a_genuine_tls_destination():
+    # A forged "http" on a real https hop must not make an http Origin match.
+    connection = _connection(origin="http://voice.test", destination="https://voice.test")
+    connection.headers["x-forwarded-proto"] = "http"
+
+    assert origin_allowed(connection) is False
+
+
+@pytest.mark.parametrize("junk", ["ftp", "", "  ", "HTTPS://x", "null"])
+def test_unrecognized_forwarded_proto_values_are_ignored(junk):
+    accepted = _connection(origin="http://voice.test", destination="http://voice.test")
+    accepted.headers["x-forwarded-proto"] = junk
+    rejected = _connection(origin="https://voice.test", destination="http://voice.test")
+    rejected.headers["x-forwarded-proto"] = junk
+
+    assert origin_allowed(accepted) is True
+    assert origin_allowed(rejected) is False
+
+
 @pytest.mark.parametrize(
     ("marker", "origin"),
     [(None, "https://voice.test"), ("", "https://voice.test"), ("0", "https://voice.test"), ("1", None)],

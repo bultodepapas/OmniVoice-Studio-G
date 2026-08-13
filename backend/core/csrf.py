@@ -10,6 +10,49 @@ CSRF_HEADER = "x-voicestudio-csrf"
 CSRF_VALUE = "1"
 SAFE_HTTP_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
+_FORWARDED_PROTO_HEADER = "x-forwarded-proto"
+
+
+def effective_scheme(connection) -> str:
+    """Scheme of the client-facing hop: the resolved scope, TLS-upgraded by proxy evidence.
+
+    Behind a TLS-terminating proxy (Tailscale Serve — the flagship remote-GPU
+    deployment in docs/remote-gpu.md — nginx, Caddy, ...) the browser talks
+    ``https`` while the backend hop is plain ``http``. uvicorn's
+    ProxyHeadersMiddleware (on by default in both launch paths: ``uvicorn.run``
+    in backend/main.py and the Docker ``python -m uvicorn`` entrypoint) already
+    rewrites the ASGI scope from ``X-Forwarded-Proto``, but only when the peer
+    is in ``--forwarded-allow-ips`` (default: loopback). That covers Serve on
+    bare metal, and we prefer that signal — the scope is consulted first — but
+    it misses Docker (the proxy connects from the bridge gateway) and any other
+    non-loopback proxy topology, so the header is honored here as well.
+
+    Spoofing analysis — why honoring it never weakens a check: the upgrade is
+    one-way. ``https``/``wss`` as the first forwarded value promotes ``http``
+    to ``https``; every other value is ignored, so a forged header can never
+    downgrade a genuine TLS hop. For the exact-origin comparison the host:port
+    half of the tuple is untouched, a browser cannot attach X-Forwarded-Proto
+    cross-site without a CORS preflight this API never grants, and a
+    non-browser client able to forge the header can already forge Origin
+    itself — it gains nothing. For cookies the upgrade can only ADD the Secure
+    flag (a Secure cookie set over plain http is simply dropped by the
+    browser — the spoofer only breaks their own session), never strip it.
+    """
+    url = getattr(connection, "url", None)
+    scheme = getattr(url, "scheme", None)
+    if not scheme:
+        scope = getattr(connection, "scope", None)
+        scheme = scope.get("scheme", "http") if isinstance(scope, dict) else "http"
+    scheme = {"ws": "http", "wss": "https"}.get(scheme, scheme)
+    if scheme != "https":
+        headers = getattr(connection, "headers", None) or {}
+        forwarded = (
+            headers.get(_FORWARDED_PROTO_HEADER, "") if hasattr(headers, "get") else ""
+        )
+        if forwarded.split(",")[0].strip().lower() in {"https", "wss"}:
+            scheme = "https"
+    return scheme
+
 
 def _origin_tuple(value: str | None) -> tuple[str, str, int | None] | None:
     if not value or value == "null":
@@ -59,22 +102,16 @@ def configured_allowed_origins() -> frozenset[tuple[str, str, int | None]]:
 
 
 def _destination_origin(connection) -> tuple[str, str, int | None] | None:
+    scheme = effective_scheme(connection)
     url = getattr(connection, "url", None)
-    if url is not None:
-        try:
-            scheme = {"ws": "http", "wss": "https"}.get(url.scheme, url.scheme)
-            return _origin_tuple(f"{scheme}://{url.netloc}")
-        except AttributeError:
-            pass
+    netloc = getattr(url, "netloc", None)
+    if netloc:
+        return _origin_tuple(f"{scheme}://{netloc}")
     scope = getattr(connection, "scope", None)
     headers = getattr(connection, "headers", None) or {}
     if not isinstance(scope, dict):
         return None
     host = headers.get("host", "") if hasattr(headers, "get") else ""
-    scheme = {"ws": "http", "wss": "https"}.get(
-        scope.get("scheme", "http"),
-        scope.get("scheme", "http"),
-    )
     return _origin_tuple(f"{scheme}://{host}")
 
 

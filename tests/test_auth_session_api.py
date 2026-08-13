@@ -105,6 +105,46 @@ def test_https_cookie_is_secure():
     assert "Secure" in response.headers["set-cookie"]
 
 
+def test_cookie_behind_tls_terminating_proxy_is_secure():
+    # Tailscale Serve / reverse proxy (docs/remote-gpu.md): TLS terminates at
+    # the proxy, the backend hop is plain http with X-Forwarded-Proto: https.
+    response = _issue_cookie(
+        _client(),
+        headers={**_master_headers(), "X-Forwarded-Proto": "https"},
+    )
+
+    assert response.status_code == 204
+    assert "Secure" in response.headers["set-cookie"]
+
+
+def test_spoofed_forwarded_proto_cannot_strip_secure_on_real_https():
+    response = _issue_cookie(
+        _client(https=True),
+        headers={**_master_headers(), "X-Forwarded-Proto": "http"},
+    )
+
+    assert response.status_code == 204
+    assert "Secure" in response.headers["set-cookie"]
+
+
+def test_https_origin_behind_tls_terminating_proxy_can_logout():
+    # Exact-origin CSRF must compare against the browser-facing https origin,
+    # not the plain-http backend hop, or every proxied logout 403s.
+    client = _client()
+    assert _issue_cookie(client).status_code == 204
+
+    response = client.delete(
+        "/api/auth/session",
+        headers={
+            "Origin": "https://voice.test",
+            "X-VoiceStudio-CSRF": "1",
+            "X-Forwarded-Proto": "https",
+        },
+    )
+
+    assert response.status_code == 204
+
+
 def test_bearer_transport_returns_only_short_lived_session():
     response = _issue_bearer(_client())
     payload = response.json()
