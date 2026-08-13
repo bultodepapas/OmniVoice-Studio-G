@@ -125,8 +125,9 @@ function persistedFixtures() {
   };
 }
 
-async function installDeterministicBrowserState(page: Page): Promise<void> {
+async function installDeterministicBrowserState(page: Page): Promise<Set<string>> {
   const fixtures = persistedFixtures();
+  const unexpectedRequests = new Set<string>();
   await page.addInitScript(
     ({ appKey, omniUiKey, app, omniUi }) => {
       // Fix window identity and API routing before any application module runs.
@@ -295,6 +296,23 @@ async function installDeterministicBrowserState(page: Page): Promise<void> {
       '/sysinfo': { cpu: 0, ram: 0, total_ram: 32, vram: 0, gpu_active: false },
       '/system/info': { platform: 'benchmark', device: 'deterministic' },
       '/system/notifications': { notifications: [] },
+      '/system/last-run-crash': { record: null, acknowledged: false },
+      '/system/logs': { path: '', exists: false, lines: [] },
+      '/system/logs/tauri': { path: '', exists: false, lines: [] },
+      '/system/network/state': { enabled: false },
+      '/dictation/prefs': {
+        enabled: false,
+        mode: 'toggle',
+        model_id: 'sherpa-parakeet-tdt-v3',
+      },
+      '/workers': { enabled: false, running: false, workers: [] },
+      '/workers/target': {
+        target: 'local',
+        active: { remote: false },
+        targets: [
+          { id: 'local', label: 'Local', is_local: true, status: 'ready', available: true },
+        ],
+      },
       '/api/settings/analytics': { available: false, prompted: true, opted_in: false },
       '/donation_progress.json': {
         raised: 10,
@@ -305,13 +323,26 @@ async function installDeterministicBrowserState(page: Page): Promise<void> {
       },
     };
 
+    const responseBody = responseByPath[path];
+    if (responseBody === undefined) {
+      unexpectedRequests.add(`${request.method()} ${path}`);
+      await route.fulfill({
+        status: 501,
+        contentType: 'application/json',
+        headers: { 'x-omnivoice-backend': '1' },
+        body: JSON.stringify({ detail: 'Unhandled deterministic benchmark route' }),
+      });
+      return;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       headers: { 'x-omnivoice-backend': '1' },
-      body: JSON.stringify(responseByPath[path] ?? {}),
+      body: JSON.stringify(responseBody),
     });
   });
+  return unexpectedRequests;
 }
 
 async function setPhase(page: Page, phase: string): Promise<void> {
@@ -374,7 +405,7 @@ async function writeReport(testInfo: TestInfo, report: unknown): Promise<void> {
 }
 
 test('coalesces large-state persistence during rapid UI input', async ({ page }, testInfo) => {
-  await installDeterministicBrowserState(page);
+  const unexpectedRequests = await installDeterministicBrowserState(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   const scaleSelector = '.appearance-panel input[type="range"]';
@@ -445,10 +476,14 @@ test('coalesces large-state persistence during rapid UI input', async ({ page },
       writes: metrics.writes.filter((write) => write.phase === 'startup'),
       longTasks: metrics.longTasks.filter((sample) => sample.phase === 'startup'),
     },
+    network: { unexpectedRequests: [...unexpectedRequests].sort() },
   };
   await writeReport(testInfo, report);
 
   expect(durable.omniUi?.text).toBe(finalText);
+  expect([...unexpectedRequests].sort(), 'every fetch/XHR must have an explicit fixture').toEqual(
+    [],
+  );
   expect(metrics.inputToNextRaf.filter((sample) => sample.phase === 'ui-scale')).toHaveLength(
     UPDATE_COUNT,
   );

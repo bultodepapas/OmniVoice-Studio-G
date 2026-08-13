@@ -1,5 +1,5 @@
-import React, { StrictMode } from 'react';
-import { act, cleanup, renderHook } from '@testing-library/react';
+import React, { StrictMode, Suspense } from 'react';
+import { act, cleanup, render, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const persistenceProbe = vi.hoisted(() => ({
@@ -256,6 +256,39 @@ describe('useAppData omni_ui persistence', () => {
     expect(writes).toHaveLength(1);
     expect(writes[0].text).toBe('continuous-5');
     expect(persistenceProbe.providerReads).toBe(1);
+  });
+
+  it('never persists state from a render that React abandons', () => {
+    let suspendNextRender = false;
+    const neverSettles = new Promise(() => {});
+    function ConcurrentHarness() {
+      useAppData();
+      if (suspendNextRender) throw neverSettles;
+      return null;
+    }
+
+    render(
+      <Suspense fallback={<div>waiting</div>}>
+        <ConcurrentHarness />
+      </Suspense>,
+    );
+    act(() => {
+      flushPendingWrites();
+      useAppStore.getState().setText('last committed script');
+    });
+
+    // The store notification starts a render which suspends before commit.
+    // A render-time ref assignment exposed this value to the already-pending
+    // provider even though React never published it to the UI.
+    suspendNextRender = true;
+    act(() => {
+      useAppStore.getState().setText('abandoned candidate');
+    });
+    act(() => {
+      flushPendingWrites();
+    });
+
+    expect(JSON.parse(localStorage.getItem('omni_ui')).text).toBe('last committed script');
   });
 
   it('uses generation-bound cleanup across StrictMode updates and unmount', () => {

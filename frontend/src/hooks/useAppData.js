@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '../store';
 import { listProfiles } from '../api/profiles';
 import { listHistory } from '../api/generate';
@@ -94,11 +94,8 @@ export default function useAppData() {
   const [omniUiRestoreComplete, setOmniUiRestoreComplete] = useState(false);
   const omniUiWriteDisposerRef = useRef(null);
 
-  // Keep a cheap latest-value view for the deferred writer. Arrays and nested
-  // objects retain the same immutable references published by React/Zustand;
-  // serialization happens only when the scheduler flushes.
   const omniUiSnapshotRef = useRef(null);
-  omniUiSnapshotRef.current = {
+  const omniUiSnapshot = {
     uiScale,
     text,
     mode,
@@ -126,6 +123,13 @@ export default function useAppData() {
     denoise,
     showOverrides,
   };
+  // Only expose committed state to the deferred writer. Publishing during
+  // render would let a timer or lifecycle flush observe a concurrent render
+  // that React later abandons. Layout effects run before the passive effect
+  // that registers the provider, without copying any nested document data.
+  useLayoutEffect(() => {
+    omniUiSnapshotRef.current = omniUiSnapshot;
+  });
 
   // ── Model status (TanStack Query) ──
   // Sysinfo lives in Header (the only consumer) so its 5s poll doesn't

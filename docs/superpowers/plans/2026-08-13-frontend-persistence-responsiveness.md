@@ -402,10 +402,10 @@ Run it with:
 
 ```powershell
 cd frontend
-bun run playwright test --config=playwright.perf.config.ts responsiveness.spec.ts --repeat-each=5 --reporter=line
+node ./node_modules/@playwright/test/cli.js test --config=playwright.perf.config.ts responsiveness.spec.ts --repeat-each=5 --reporter=line
 ```
 
-Run `bun install --frozen-lockfile` first. The command above is verified from `frontend/` to resolve the installed Playwright 1.61.0 binary; do not replace it with `bun x playwright`, which can select the root's different Playwright version or fetch a package. If `PLAYWRIGHT_CHROMIUM` is unset and no supported system Chromium exists, install the pinned browser once with `bun run playwright install chromium`. This adds no project dependency, and the dedicated config provides the cross-platform executable fallback.
+Run `bun install --frozen-lockfile` first. The command above is verified from `frontend/` to resolve the installed Playwright 1.61.0 CLI by exact package path; do not replace it with `bun x playwright` or a global `bun run` shim, which can select another Playwright version, fetch a package, or even resolve a stale Windows shim. If `PLAYWRIGHT_CHROMIUM` is unset and no supported system Chromium exists, install the pinned browser once with `node ./node_modules/@playwright/test/cli.js install chromium`. This adds no project dependency, and the dedicated config provides the cross-platform executable fallback. The config owns port 4174 and never reuses an existing listener, so a stale preview fails loudly and every successful run tears down the exact server it started.
 
 Use the same browser version, build mode, machine power state, and fixture on both commits.
 

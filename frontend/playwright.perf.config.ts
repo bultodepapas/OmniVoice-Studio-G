@@ -18,6 +18,10 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
+  // `--repeat-each=5` is a variance sample, not five independent load tests.
+  // Keep repeats serial so they do not contend with each other or distort the
+  // input/long-task evidence on high-core development machines.
+  workers: 1,
   retries: 0,
   reporter: [['list']],
   outputDir: 'test-results/responsiveness',
@@ -34,7 +38,10 @@ export default defineConfig({
     // shim happens to precede the checked-in toolchain on PATH.
     command: `node ./node_modules/vite/bin/vite.js build && node ./node_modules/vite/bin/vite.js preview --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    // Always own the production preview used for a measurement. Reusing an
+    // arbitrary listener can benchmark stale dist bytes and leaves teardown
+    // ownership ambiguous; a stale 4174 listener should fail loudly instead.
+    reuseExistingServer: false,
     timeout: 180_000,
   },
 });
