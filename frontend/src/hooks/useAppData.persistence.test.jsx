@@ -268,7 +268,7 @@ describe('useAppData omni_ui persistence', () => {
     }
 
     render(
-      <Suspense fallback={<div>waiting</div>}>
+      <Suspense fallback={null}>
         <ConcurrentHarness />
       </Suspense>,
     );

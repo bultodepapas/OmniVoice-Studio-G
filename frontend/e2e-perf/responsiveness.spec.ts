@@ -213,9 +213,9 @@ async function installDeterministicBrowserState(page: Page): Promise<Set<string>
         observer.observe({ type: 'longtask', buffered: true });
       }
 
-      // Keep the realtime hook deterministic and fully local. It needs only
-      // the WebSocket surface it actually consumes (readyState + handlers).
-      class DeterministicWebSocket {
+      // Keep the realtime hook deterministic and fully local while preserving
+      // the handler and EventTarget surfaces used by capture/realtime clients.
+      class DeterministicWebSocket extends EventTarget {
         static readonly CONNECTING = 0;
         static readonly OPEN = 1;
         static readonly CLOSING = 2;
@@ -229,11 +229,14 @@ async function installDeterministicBrowserState(page: Page): Promise<Set<string>
         onclose: ((event: CloseEvent) => void) | null = null;
 
         constructor(url: string | URL) {
+          super();
           this.url = String(url);
           queueMicrotask(() => {
             if (this.readyState !== DeterministicWebSocket.CONNECTING) return;
             this.readyState = DeterministicWebSocket.OPEN;
-            this.onopen?.(new Event('open'));
+            const event = new Event('open');
+            this.dispatchEvent(event);
+            this.onopen?.(event);
           });
         }
 
@@ -242,7 +245,9 @@ async function installDeterministicBrowserState(page: Page): Promise<Set<string>
         close(): void {
           if (this.readyState === DeterministicWebSocket.CLOSED) return;
           this.readyState = DeterministicWebSocket.CLOSED;
-          this.onclose?.(new CloseEvent('close', { code: 1000, wasClean: true }));
+          const event = new CloseEvent('close', { code: 1000, wasClean: true });
+          this.dispatchEvent(event);
+          this.onclose?.(event);
         }
       }
 
@@ -407,6 +412,29 @@ async function writeReport(testInfo: TestInfo, report: unknown): Promise<void> {
 test('coalesces large-state persistence during rapid UI input', async ({ page }, testInfo) => {
   const unexpectedRequests = await installDeterministicBrowserState(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+  const listenerProbe = await page.evaluate(async () => {
+    const socket = new WebSocket('ws://benchmark.invalid');
+    let onceCalls = 0;
+    let removedCalls = 0;
+    const removedListener = () => {
+      removedCalls += 1;
+    };
+    socket.addEventListener(
+      'open',
+      () => {
+        onceCalls += 1;
+      },
+      { once: true },
+    );
+    socket.addEventListener('open', removedListener);
+    socket.removeEventListener('open', removedListener);
+    await Promise.resolve();
+    socket.dispatchEvent(new Event('open'));
+    socket.close();
+    return { onceCalls, removedCalls };
+  });
+  expect(listenerProbe).toEqual({ onceCalls: 1, removedCalls: 0 });
 
   const scaleSelector = '.appearance-panel input[type="range"]';
   await expect(page.locator(scaleSelector)).toBeVisible();
