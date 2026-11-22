@@ -1,0 +1,1868 @@
+{
+  "schema_version": 1,
+  "repository": "debpalash/VoiceStudio",
+  "snapshot_started_at_utc": "2026-11-22T16:24:40Z",
+  "snapshot_revalidated_at_utc": "2026-11-22T16:38:01Z",
+  "snapshot_revalidated_at_bogota": "2026-11-22T11:38:01-05:00",
+  "upstream_main_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+  "upstream_main_url": "https://github.com/debpalash/VoiceStudio/commit/2bb21302241793977055c44f7c52815bcbf0261e",
+  "coverage": {
+    "open_issues_count": 28,
+    "open_prs_count": 15,
+    "issue_collection_pages_read": 1,
+    "issue_collection_rows": 43,
+    "pr_collection_pages_read": 1,
+    "pr_collection_rows": 15,
+    "last_page_shorter_than_page_size": true,
+    "page_size": 100,
+    "all_open_pr_file_lists_complete": true,
+    "open_issue_comment_threads_reviewed": 17,
+    "administrative_signature_thread_excluded": true,
+    "open_pr_head_shas_unchanged_at_revalidation": true,
+    "sources": [
+      "https://api.github.com/repos/debpalash/VoiceStudio/issues?state=open&per_page=100&page=1&sort=updated&direction=desc",
+      "https://api.github.com/repos/debpalash/VoiceStudio/pulls?state=open&per_page=100&page=1&sort=updated&direction=desc"
+    ],
+    "publication_refresh_added_pr_numbers": [
+      4350,
+      4351,
+      4352,
+      4353,
+      4354
+    ],
+    "open_pr_changed_file_entries": 175
+  },
+  "source_guidance": [
+    "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/AGENTS.md",
+    "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/CLAUDE.md",
+    "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/.github/CONTRIBUTING.md",
+    "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/.github/AGENT_PR_GUIDE.md",
+    "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/docs/agents/issue-tracker.md",
+    "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/docs/agents/triage-labels.md"
+  ],
+  "open_issues": [
+    {
+      "number": 4347,
+      "title": "[Bug] Translation error card persists with a no-op Retry while the source language is still undetected",
+      "summary": "Unknown source language leaves Retry inert and can label untranslated speech as the target language",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4347",
+      "created_at": "2026-11-22T14:40:14Z",
+      "updated_at": "2026-11-22T16:08:01Z",
+      "labels": [],
+      "assignees": [],
+      "comment_count": 1,
+      "category": "Dubbing / translation provenance",
+      "recommended_action": "High-impact investigation, conditional on coordination with #4220/#4221. Reproduce missing translation state before designing a provenance guard; equality of source/target strings alone is insufficient.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4347",
+        "https://github.com/debpalash/VoiceStudio/issues/4347#issuecomment-7081838333",
+        "https://github.com/debpalash/VoiceStudio/pull/4220",
+        "https://github.com/debpalash/VoiceStudio/pull/4221"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4347#issuecomment-7081838333"
+      ]
+    },
+    {
+      "number": 4346,
+      "title": "[Bug] Dubbing export fails with dub_background_unavailable after a completed render: no_vocals stem was never produced and vocals.wav is a byte-identical copy of the source",
+      "summary": "Completed dubbing cannot export with preserved background when separation is unavailable",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4346",
+      "created_at": "2026-11-22T14:40:08Z",
+      "updated_at": "2026-11-22T14:40:08Z",
+      "labels": [],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Dubbing / export and separation",
+      "recommended_action": "Coordinate with #4218/#4220/#4221. Reproduce failed-separation cache reuse and preserve a speech-only export path; do not silently substitute source audio or assert the GPU kill cause without evidence.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4346",
+        "https://github.com/debpalash/VoiceStudio/pull/4218",
+        "https://github.com/debpalash/VoiceStudio/pull/4220",
+        "https://github.com/debpalash/VoiceStudio/pull/4221"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4345,
+      "title": "mcp_shim (stdio) perde a sessão com o Claude Code: 400 Missing session ID, depois 404 Session not found",
+      "summary": "MCP stdio shim loses its HTTP session with Claude Code",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4345",
+      "created_at": "2026-11-22T14:12:43Z",
+      "updated_at": "2026-11-22T14:12:43Z",
+      "labels": [],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "MCP transport",
+      "recommended_action": "Preferred contribution 2: reproduce on pinned main and compare the reported older 0.5.6 image. Diagnose protocol ordering/header handling before changing it; retain HTTP authorization semantics.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4345",
+        "https://github.com/debpalash/VoiceStudio/pull/4128",
+        "https://github.com/debpalash/VoiceStudio/pull/4315"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4344,
+      "title": "[Bug] Voice Cloning silently ignores the selected profile with MLX VoxCPM2 8-bit",
+      "summary": "Voice Cloning silently ignores the selected profile with MLX VoxCPM2 8-bit",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4344",
+      "created_at": "2026-11-22T12:23:25Z",
+      "updated_at": "2026-11-22T12:23:25Z",
+      "labels": [],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Engine capabilities / cloning UI",
+      "recommended_action": "Preferred contribution 1: reject unsupported clone intent explicitly and resolve model-specific capability/preset data. Preserve valid Kokoro preset generation. Coordinate only if touching #4216's shared picker/test scope.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4344",
+        "https://github.com/debpalash/VoiceStudio/pull/4216",
+        "https://github.com/debpalash/VoiceStudio/pull/3833#issuecomment-6734787583"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4343,
+      "title": "[Feature] add new more model",
+      "summary": "Request additional models for low-end CPU/AMD hardware",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4343",
+      "created_at": "2026-11-22T12:16:11Z",
+      "updated_at": "2026-11-22T12:16:11Z",
+      "labels": [
+        "enhancement"
+      ],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Engine proposal / support",
+      "recommended_action": "Clarify the named workload and existing Kokoro route first. Apply engine-acceptance criteria to any new Phonon integration; a broad model-catalog expansion is not a bounded next fix.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4343",
+        "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/docs/engine-acceptance.md",
+        "https://github.com/debpalash/VoiceStudio/pull/3833#issuecomment-6734787583"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4342,
+      "title": "[Install] CosyVoice 3 GGUF (native Vulkan/CPU, 9 langs, reference clone)",
+      "summary": "CosyVoice 3 GGUF native runtime is unavailable after installation",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4342",
+      "created_at": "2026-11-22T12:12:37Z",
+      "updated_at": "2026-11-22T12:12:37Z",
+      "labels": [
+        "needs-triage",
+        "install"
+      ],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Windows / optional-engine setup",
+      "recommended_action": "Collect a precise runtime probe and setup failure, reproduce on current beta/main, and distinguish weights downloaded from native runtime installed. No matching repair established from this sparse report.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4342"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4341,
+      "title": "[Install] audio.cpp · dots.tts (native GGUF, multilingual voice cloning; Apache-2.0)",
+      "summary": "audio.cpp dots.tts installation reports a missing or unreadable required file",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4341",
+      "created_at": "2026-11-22T12:09:38Z",
+      "updated_at": "2026-11-22T12:09:38Z",
+      "labels": [
+        "needs-triage",
+        "install"
+      ],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Windows / optional-engine setup",
+      "recommended_action": "Obtain the failing install step and sanitized log, then reproduce. Avoid assuming that all native-engine failures share one cause with #4342.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4341"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4314,
+      "title": "[Install] torch (2.7 GB)",
+      "summary": "Torch setup download remains at 0%",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4314",
+      "created_at": "2026-11-20T17:05:20Z",
+      "updated_at": "2026-11-22T08:47:33Z",
+      "labels": [
+        "needs-triage",
+        "install"
+      ],
+      "assignees": [],
+      "comment_count": 2,
+      "category": "Windows / runtime download",
+      "recommended_action": "Review the newly supplied setup log before designing a fix; recheck proxy/retry changes and open #4348. Independently installed Torch is outside the managed runtime.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4314",
+        "https://github.com/debpalash/VoiceStudio/issues/4314#issuecomment-7070466762",
+        "https://github.com/debpalash/VoiceStudio/issues/4314#issuecomment-7076739436",
+        "https://github.com/debpalash/VoiceStudio/pull/4348"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4314#issuecomment-7070466762",
+        "https://github.com/debpalash/VoiceStudio/issues/4314#issuecomment-7076739436"
+      ]
+    },
+    {
+      "number": 4319,
+      "title": "[Bug] Vietnamese (omnivoice): numbers misread — \"nghìn\"/\"trăm\"/\"mươi\" dropped, even when the number is spelled out in words",
+      "summary": "Vietnamese numbers lose magnitude words in generated speech",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4319",
+      "created_at": "2026-11-21T03:44:32Z",
+      "updated_at": "2026-11-22T03:01:46Z",
+      "labels": [
+        "bug",
+        "needs-triage"
+      ],
+      "assignees": [],
+      "comment_count": 2,
+      "category": "Speech quality / normalization",
+      "recommended_action": "Validate remaining tens, percentages and years after merged #4332. Preserve the reporter's finding that decimal word expansion can be worse; requires real audio and language review.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4319",
+        "https://github.com/debpalash/VoiceStudio/pull/4332",
+        "https://github.com/debpalash/VoiceStudio/issues/4319#issuecomment-7073280948"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4319#issuecomment-7070514272",
+        "https://github.com/debpalash/VoiceStudio/issues/4319#issuecomment-7073280948"
+      ]
+    },
+    {
+      "number": 2586,
+      "title": "Contributor License Agreement: sign here",
+      "summary": "Contributor License Agreement signing issue",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/2586",
+      "created_at": "2026-10-02T23:12:40Z",
+      "updated_at": "2026-11-21T13:21:42Z",
+      "labels": [
+        "cla"
+      ],
+      "assignees": [],
+      "comment_count": 82,
+      "category": "Contribution administration",
+      "recommended_action": "Not an implementation task. The human contributor verifies their own signature status before an upstream PR; this audit neither signs nor republishes signature records.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/2586",
+        "https://github.com/debpalash/VoiceStudio/blob/2bb21302241793977055c44f7c52815bcbf0261e/.github/CONTRIBUTING.md#contribution-licensing"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4262,
+      "title": "[Bug] App fails to start, dependency/model downloads fail, and existing models are not recognized after overwrite update",
+      "summary": "Overwrite update fails to start and does not recognize existing dependencies/models",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4262",
+      "created_at": "2026-11-19T13:13:33Z",
+      "updated_at": "2026-11-19T21:47:05Z",
+      "labels": [
+        "bug",
+        "needs-info"
+      ],
+      "assignees": [],
+      "comment_count": 1,
+      "category": "Setup / update recovery",
+      "recommended_action": "Await concrete old/new versions and diagnosis. Maintainer points to #4265 for one proxy cause; #4348/#4349 concern related setup/cache paths but do not prove this report fixed.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4262",
+        "https://github.com/debpalash/VoiceStudio/issues/4262#issuecomment-7023119886",
+        "https://github.com/debpalash/VoiceStudio/pull/4348",
+        "https://github.com/debpalash/VoiceStudio/pull/4349"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4262#issuecomment-7023119886"
+      ]
+    },
+    {
+      "number": 4250,
+      "title": "[Bug] Backend exited with code 3 during a long OmniVoice generate (RTX PRO 6000, Windows)",
+      "summary": "Backend exits with code 3 during a long OmniVoice generation",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4250",
+      "created_at": "2026-11-18T05:34:34Z",
+      "updated_at": "2026-11-19T21:41:00Z",
+      "labels": [
+        "bug"
+      ],
+      "assignees": [],
+      "comment_count": 1,
+      "category": "Long generation / backend lifecycle",
+      "recommended_action": "Obtain a current reproducible sequence and input length/language. Maintainer split gallery/licensing symptoms away; do not combine them into a crash rewrite or infer OOM.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4250",
+        "https://github.com/debpalash/VoiceStudio/issues/4250#issuecomment-7022986464"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4250#issuecomment-7022986464"
+      ]
+    },
+    {
+      "number": 4118,
+      "title": "[Bug] The Python environment in [reporter-local path redacted] is incomplete",
+      "summary": "Source checkout Python environment cannot import omnivoice",
+      "title_redacted": true,
+      "title_redaction_reason": "The upstream title contains a reporter-local filesystem path; the source URL retains the exact public title.",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4118",
+      "created_at": "2026-11-14T09:41:49Z",
+      "updated_at": "2026-11-17T18:23:42Z",
+      "labels": [
+        "needs-info",
+        "install",
+        "install:source"
+      ],
+      "assignees": [
+        "debpalash"
+      ],
+      "comment_count": 2,
+      "category": "Source installation",
+      "recommended_action": "Support follow-up already owned by debpalash: confirm setup:api outcome and a fresh failure. Do not treat the older embedded native crash as the current missing-package cause.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4118",
+        "https://github.com/debpalash/VoiceStudio/issues/4118#issuecomment-6875510075",
+        "https://github.com/debpalash/VoiceStudio/issues/4118#issuecomment-6957030829"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4118#issuecomment-6875510075",
+        "https://github.com/debpalash/VoiceStudio/issues/4118#issuecomment-6957030829"
+      ]
+    },
+    {
+      "number": 4136,
+      "title": "audio file is missing",
+      "summary": "Stories player reports missing audio after generation",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4136",
+      "created_at": "2026-11-14T13:43:16Z",
+      "updated_at": "2026-11-17T18:23:40Z",
+      "labels": [
+        "bug",
+        "needs-info"
+      ],
+      "assignees": [
+        "debpalash"
+      ],
+      "comment_count": 3,
+      "category": "Long-form playback",
+      "recommended_action": "Coordinate with assigned maintainer; check merged #4138 and #4196 before changing playback. Underlying reporter failure still needs engine/backend and reproduction evidence.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4136",
+        "https://github.com/debpalash/VoiceStudio/issues/4136#issuecomment-6880226831",
+        "https://github.com/debpalash/VoiceStudio/pull/4196"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4136#issuecomment-6878253109",
+        "https://github.com/debpalash/VoiceStudio/issues/4136#issuecomment-6880226831",
+        "https://github.com/debpalash/VoiceStudio/issues/4136#issuecomment-6957030158"
+      ]
+    },
+    {
+      "number": 3635,
+      "title": "[Bug] Local engine fails to start: Windows blocks unsigned python.exe (spawn UNKNOWN)",
+      "summary": "Windows Smart App Control blocks the unsigned Python runtime",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/3635",
+      "created_at": "2026-10-28T14:49:31Z",
+      "updated_at": "2026-11-16T07:43:47Z",
+      "labels": [
+        "bug",
+        "ready-for-human",
+        "install",
+        "priority:P0",
+        "awaiting-owner-decision",
+        "install:windows"
+      ],
+      "assignees": [],
+      "comment_count": 2,
+      "category": "Runtime trust / distribution",
+      "recommended_action": "Existing-Python selection already shipped in #3701/0.5.8. Remaining runtime/DLL trust requires a maintainer distribution decision and real SAC validation, not another interpreter selector.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3635",
+        "https://github.com/debpalash/VoiceStudio/issues/3635#issuecomment-6910485742",
+        "https://github.com/debpalash/VoiceStudio/issues/1779"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3635#issuecomment-6476856271",
+        "https://github.com/debpalash/VoiceStudio/issues/3635#issuecomment-6910485742"
+      ]
+    },
+    {
+      "number": 4199,
+      "title": "CosyVoice3: reference-conditioned generation reportedly adds or omits requested speech",
+      "summary": "CosyVoice3 reference-conditioned generation adds or omits speech",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4199",
+      "created_at": "2026-11-15T19:21:57Z",
+      "updated_at": "2026-11-15T21:50:11Z",
+      "labels": [
+        "bug",
+        "from-discord",
+        "needs-info",
+        "priority:P2"
+      ],
+      "assignees": [
+        "debpalash"
+      ],
+      "comment_count": 0,
+      "category": "Model output correctness",
+      "recommended_action": "Assigned investigation: reproduce the reported seed-dependent output with consented evidence and distinguish integration from upstream-model behavior. Do not claim sample-rate or profile-inheritance cause.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4199"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4090,
+      "title": "Mac Stories becomes slow and returns Home when rendering a short paragraph",
+      "summary": "Mac Stories is slow and lacks a clear completion/player state after longer renders",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4090",
+      "created_at": "2026-11-13T20:49:18Z",
+      "updated_at": "2026-11-15T15:22:06Z",
+      "labels": [
+        "bug",
+        "from-discord",
+        "needs-info"
+      ],
+      "assignees": [],
+      "comment_count": 3,
+      "category": "Long-form UX / performance",
+      "recommended_action": "Reporter confirms saved output exists. Reproduce the completion-state transition; consider existing recovery and stream-completion work without declaring a crash proven.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4090",
+        "https://github.com/debpalash/VoiceStudio/issues/4090#issuecomment-6896779747",
+        "https://github.com/debpalash/VoiceStudio/pull/4097",
+        "https://github.com/debpalash/VoiceStudio/pull/4286"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4090#issuecomment-6889992551",
+        "https://github.com/debpalash/VoiceStudio/issues/4090#issuecomment-6890951931",
+        "https://github.com/debpalash/VoiceStudio/issues/4090#issuecomment-6896779747"
+      ]
+    },
+    {
+      "number": 3924,
+      "title": "Maximise app performance: startup, inference, memory, long jobs, UI, install, energy, mobile",
+      "summary": "Performance tracker across startup, inference, memory, UI, installation and mobile",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/3924",
+      "created_at": "2026-11-09T08:45:14Z",
+      "updated_at": "2026-11-15T11:03:35Z",
+      "labels": [
+        "enhancement",
+        "tracking"
+      ],
+      "assignees": [],
+      "comment_count": 4,
+      "category": "Performance tracking",
+      "recommended_action": "Choose one measured remaining subproblem. Reconcile the unchecked checklist with merged PRs before implementing; progressive markup streaming is the planned scoped follow-up.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3924",
+        "https://github.com/debpalash/VoiceStudio/pull/4254",
+        "https://github.com/debpalash/VoiceStudio/pull/4320",
+        "https://github.com/debpalash/VoiceStudio/pull/4321",
+        "https://github.com/debpalash/VoiceStudio/pull/4322",
+        "https://github.com/debpalash/VoiceStudio/pull/4323"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6746084134",
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6821554774",
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6877223053",
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6892897608"
+      ]
+    },
+    {
+      "number": 4159,
+      "title": "[Linux AMD] RX 6700 XT/gfx1031: HIPBLAS_STATUS_ALLOC_FAILED in v0.5.8 AppImage",
+      "summary": "Linux RX 6700 XT HIPBLAS initialization failure",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4159",
+      "created_at": "2026-11-15T01:40:21Z",
+      "updated_at": "2026-11-15T09:41:39Z",
+      "labels": [
+        "bug",
+        "from-discord",
+        "needs-info",
+        "install",
+        "install:linux"
+      ],
+      "assignees": [
+        "debpalash"
+      ],
+      "comment_count": 3,
+      "category": "Linux AMD / hardware diagnosis",
+      "recommended_action": "Assigned issue: obtain actual failing runtime/GPU evidence. #4166/#4167 fix diagnosis/install behavior, not the underlying HIPBLAS failure; Windows proof is not Linux proof.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4159",
+        "https://github.com/debpalash/VoiceStudio/issues/4159#issuecomment-6889733960"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4159#issuecomment-6888221645",
+        "https://github.com/debpalash/VoiceStudio/issues/4159#issuecomment-6889677942",
+        "https://github.com/debpalash/VoiceStudio/issues/4159#issuecomment-6889733960"
+      ]
+    },
+    {
+      "number": 4094,
+      "title": "Discord review, 31 Oct–14 Nov: confirmed dubbing fix and outstanding reports",
+      "summary": "Discord review tracker for confirmed fixes and outstanding reports",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4094",
+      "created_at": "2026-11-13T20:55:30Z",
+      "updated_at": "2026-11-15T09:15:03Z",
+      "labels": [
+        "from-discord",
+        "needs-triage",
+        "tracking"
+      ],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Support intake tracking",
+      "recommended_action": "Work on its linked concrete issues, preserving what is confirmed versus still needs information. Do not open duplicate tickets from the aggregate or call all symptoms solved by a nearby fix.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4094"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 4142,
+      "title": "[Install] NATIVE_ACCESS_VIOLATION: Backend exited unexpectedly (exit code 3221225477). Last output: Windows fatal e",
+      "summary": "Windows native access violation while loading OmniVoice weights",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4142",
+      "created_at": "2026-11-14T18:12:55Z",
+      "updated_at": "2026-11-15T05:06:54Z",
+      "labels": [
+        "bug",
+        "needs-info",
+        "install",
+        "priority:P0",
+        "install:windows",
+        "install:native-crash"
+      ],
+      "assignees": [],
+      "comment_count": 3,
+      "category": "Native model-loading crash",
+      "recommended_action": "High-severity investigation needs the current faulting-thread/runtime evidence. #4162 improved report capture only; no verified shared root cause or repair established.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4142",
+        "https://github.com/debpalash/VoiceStudio/issues/4142#issuecomment-6888908846"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4142#issuecomment-6882074477",
+        "https://github.com/debpalash/VoiceStudio/issues/4142#issuecomment-6887407277",
+        "https://github.com/debpalash/VoiceStudio/issues/4142#issuecomment-6888908846"
+      ]
+    },
+    {
+      "number": 1779,
+      "title": "[Feature] Sign your Binaries",
+      "summary": "Sign distributed binaries",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/1779",
+      "created_at": "2026-09-03T07:23:20Z",
+      "updated_at": "2026-11-14T20:35:55Z",
+      "labels": [
+        "enhancement",
+        "ready-for-human",
+        "priority:P0",
+        "awaiting-owner-decision"
+      ],
+      "assignees": [],
+      "comment_count": 11,
+      "category": "Distribution / signing",
+      "recommended_action": "macOS release evidence now reports notarization; Windows remains unsigned. Coordinate owner-controlled signing and runtime trust; signing only the installer does not establish SAC engine compatibility.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/1779",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-6883835020",
+        "https://github.com/debpalash/VoiceStudio/issues/3635"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-5525133302",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-5819485338",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-5819632193",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-5820196248",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-5820620776",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-5936940792",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-6100992716",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-6252160549",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-6438861825",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-6575466161",
+        "https://github.com/debpalash/VoiceStudio/issues/1779#issuecomment-6883835020"
+      ]
+    },
+    {
+      "number": 4150,
+      "title": "[Install] VoxCPM2 installation fails in the Discord 0.5.7 thread",
+      "summary": "VoxCPM2 installation failure from the older Discord report",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4150",
+      "created_at": "2026-11-14T20:09:31Z",
+      "updated_at": "2026-11-14T20:09:31Z",
+      "labels": [
+        "bug",
+        "from-discord",
+        "needs-info",
+        "install",
+        "install:engines"
+      ],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Optional-engine setup / needs evidence",
+      "recommended_action": "Request exact current version, host and failure stage through the existing issue before code changes. Later installer fixes, including #4330, cannot resolve an unspecified original report by inference.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4150",
+        "https://github.com/debpalash/VoiceStudio/pull/4330"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 3836,
+      "title": "Installation issue thread",
+      "summary": "Installation issue aggregation thread",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/3836",
+      "created_at": "2026-11-06T13:09:55Z",
+      "updated_at": "2026-11-14T08:54:48Z",
+      "labels": [
+        "install",
+        "tracking"
+      ],
+      "assignees": [],
+      "comment_count": 2,
+      "category": "Installation tracking",
+      "recommended_action": "Use the current-version diagnostic and unique signature to route to a specific issue. Several crash-reporting/fallback improvements already shipped in stable 0.5.8.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3836",
+        "https://github.com/debpalash/VoiceStudio/issues/3836#issuecomment-6820413768"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3836#issuecomment-6798842072",
+        "https://github.com/debpalash/VoiceStudio/issues/3836#issuecomment-6820413768"
+      ]
+    },
+    {
+      "number": 4092,
+      "title": "macOS Restart to update reports no updates:getState handler; backend unreachable",
+      "summary": "macOS update restart loses updates:getState handler and backend reachability",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/4092",
+      "created_at": "2026-11-13T20:49:23Z",
+      "updated_at": "2026-11-14T08:42:53Z",
+      "labels": [
+        "bug",
+        "from-discord",
+        "needs-info",
+        "install",
+        "install:update"
+      ],
+      "assignees": [],
+      "comment_count": 0,
+      "category": "Updater lifecycle",
+      "recommended_action": "#4098 already fixes a reproduced handler-teardown defect and is in beta.2. Original source/target versions and logs are still needed to confirm the reporter's incident.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4092",
+        "https://github.com/debpalash/VoiceStudio/pull/4098"
+      ],
+      "reviewed_comment_urls": []
+    },
+    {
+      "number": 3129,
+      "title": "[Feature] Add support for MOSS-Audio (4B/8B) and Drama-3-GGUF models",
+      "summary": "Drama-3 GGUF and MOSS-Audio engine request",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/3129",
+      "created_at": "2026-10-21T07:31:30Z",
+      "updated_at": "2026-11-11T11:02:09Z",
+      "labels": [
+        "enhancement",
+        "ready-for-human"
+      ],
+      "assignees": [],
+      "comment_count": 4,
+      "category": "Engine integration / hardware validation",
+      "recommended_action": "MOSS-Audio was explicitly declined. Drama-3 runtime requirement is already met; remaining family wiring, exact weight pin and real >=24 GB GPU smoke need coordination.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3129",
+        "https://github.com/debpalash/VoiceStudio/issues/3129#issuecomment-6438815706",
+        "https://github.com/debpalash/VoiceStudio/issues/3129#issuecomment-6794067917"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3129#issuecomment-6311262641",
+        "https://github.com/debpalash/VoiceStudio/issues/3129#issuecomment-6314570137",
+        "https://github.com/debpalash/VoiceStudio/issues/3129#issuecomment-6438815706",
+        "https://github.com/debpalash/VoiceStudio/issues/3129#issuecomment-6794067917"
+      ]
+    },
+    {
+      "number": 3420,
+      "title": "[Feature] Real-time voice changer with virtual microphone output (Discord, OBS, calls)",
+      "summary": "Opt-in real-time voice conversion and virtual microphone",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/3420",
+      "created_at": "2026-10-25T20:41:12Z",
+      "updated_at": "2026-11-11T08:05:14Z",
+      "labels": [
+        "enhancement",
+        "from-discord",
+        "needs-triage",
+        "priority:P2",
+        "awaiting-owner-decision"
+      ],
+      "assignees": [],
+      "comment_count": 2,
+      "category": "Large feature / latency experiment",
+      "recommended_action": "Read newer decisions rather than the stale owner-decision label. Opt-in build was approved; MeanVC2 failed the measured M2 bar. Next stated step is a five-minute Seed-VC test on RTX 3060-class hardware.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3420",
+        "https://github.com/debpalash/VoiceStudio/issues/3420#issuecomment-6757912907",
+        "https://github.com/debpalash/VoiceStudio/issues/3420#issuecomment-6790571974"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3420#issuecomment-6757912907",
+        "https://github.com/debpalash/VoiceStudio/issues/3420#issuecomment-6790571974"
+      ]
+    },
+    {
+      "number": 2468,
+      "title": "Native Windows AMD ROCm setup: verified HIP path and remaining engine parity gaps",
+      "summary": "Native Windows AMD ROCm setup and remaining engine-parity gaps",
+      "state": "open",
+      "url": "https://github.com/debpalash/VoiceStudio/issues/2468",
+      "created_at": "2026-09-30T16:34:10Z",
+      "updated_at": "2026-11-06T14:15:09Z",
+      "labels": [
+        "enhancement",
+        "ready-for-human",
+        "install",
+        "priority:P2",
+        "needs-hardware",
+        "tracking",
+        "install:amd"
+      ],
+      "assignees": [],
+      "comment_count": 8,
+      "category": "Hardware validation / tracking",
+      "recommended_action": "Base ROCm support is already present. Coordinate remaining engine/hardware evidence and avoid duplicating open #4338's CTranslate2 isolation change.",
+      "evidence_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/2468",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6454642383",
+        "https://github.com/debpalash/VoiceStudio/pull/4338"
+      ],
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-5936940404",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-5978548369",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6398754708",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6433694053",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6454642383",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6467294420",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6572416338",
+        "https://github.com/debpalash/VoiceStudio/issues/2468#issuecomment-6575608037"
+      ]
+    }
+  ],
+  "open_pull_requests": [
+    {
+      "number": 4354,
+      "title": "chore(ci): bump actions/upload-pages-artifact from 3.0.1 to 5.0.0",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4354",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T16:29:49Z",
+      "updated_at": "2026-11-22T16:29:53Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "dependabot/github_actions/actions/upload-pages-artifact-5.0.0",
+      "head_sha": "3f8d8d08dc9354885fa283187ce0706104e34970",
+      "head_repository": "debpalash/VoiceStudio",
+      "changed_filenames": [
+        ".github/workflows/android-repository.yml"
+      ],
+      "scope": "Update actions/upload-pages-artifact 3.0.1 to 5.0.0 in the Android repository publishing workflow.",
+      "overlap": "CI artifact-upload action pin only; no runtime overlap with the preferred three plans. The existing published-site path is unchanged.",
+      "review_note": "Full patch changes only the upload-pages-artifact action/version comment. No discussion or review records returned. No successful publishing run or approval is inferred.",
+      "reviewed_comment_urls": [],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4354/files"
+    },
+    {
+      "number": 4353,
+      "title": "chore(ci): bump gradle/actions/setup-gradle from 4.4.1 to 6.4.1",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4353",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T16:29:44Z",
+      "updated_at": "2026-11-22T16:29:48Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "dependabot/github_actions/gradle/actions/setup-gradle-6.4.1",
+      "head_sha": "bc721d905c7331b7679e56854b806cb972d69040",
+      "head_repository": "debpalash/VoiceStudio",
+      "changed_filenames": [
+        ".github/workflows/android-play-internal.yml",
+        ".github/workflows/mobile-release.yml",
+        ".github/workflows/mobile.yml"
+      ],
+      "scope": "Update gradle/actions/setup-gradle 4.4.1 to 6.4.1 in three Android/mobile workflows.",
+      "overlap": "CI action pins only; no runtime overlap with cloning capabilities, MCP sessions or Generate markup streaming.",
+      "review_note": "Full patch changes only setup-gradle action pins/version comments. No discussion or review records returned. Review major-version compatibility separately from the proposed product fixes.",
+      "reviewed_comment_urls": [],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4353/files"
+    },
+    {
+      "number": 4352,
+      "title": "chore(ci): bump astral-sh/setup-uv from 6.8.0 to 10.4.0",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4352",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T16:29:40Z",
+      "updated_at": "2026-11-22T16:29:44Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "dependabot/github_actions/astral-sh/setup-uv-10.4.0",
+      "head_sha": "40712a73ff54e31fd541030ace056e537f75e62b",
+      "head_repository": "debpalash/VoiceStudio",
+      "changed_filenames": [
+        ".github/workflows/android-repository.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/contributors-refresh.yml",
+        ".github/workflows/cosyvoice-dependencies.yml",
+        ".github/workflows/electron-build.yml",
+        ".github/workflows/electron-release.yml",
+        ".github/workflows/install-smoke.yml",
+        ".github/workflows/mac-app-store.yml",
+        ".github/workflows/microsoft-store.yml",
+        ".github/workflows/security.yml",
+        ".github/workflows/snap-store.yml"
+      ],
+      "scope": "Update astral-sh/setup-uv 6.8.0 to 10.4.0 across eleven build, CI, install and release workflows.",
+      "overlap": "CI setup-action pins only; no runtime implementation overlap. Existing explicit uv version and cache settings are unchanged in the patch.",
+      "review_note": "Full patch changes only setup-uv action pins/version comments. No discussion or review records returned. The release notes describe new options, but this PR does not add or change workflow inputs.",
+      "reviewed_comment_urls": [],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4352/files"
+    },
+    {
+      "number": 4351,
+      "title": "chore(ci): bump actions/github-script from 7.1.0 to 9.0.0",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4351",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T16:29:30Z",
+      "updated_at": "2026-11-22T16:29:34Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "dependabot/github_actions/actions/github-script-9.0.0",
+      "head_sha": "8c2977f4dac179915c46a6fdeb33145058ad8f81",
+      "head_repository": "debpalash/VoiceStudio",
+      "changed_filenames": [
+        ".github/workflows/docs-drift.yml"
+      ],
+      "scope": "Update actions/github-script 7.1.0 to 9.0.0 in the docs-drift issue workflow.",
+      "overlap": "CI action pin only; no runtime, MCP or markup implementation overlap. Existing docs-drift step conditions and script remain unchanged.",
+      "review_note": "Full patch changes only the pinned github-script action/version comment. No discussion or review records returned. A major action upgrade requires its own workflow compatibility checks.",
+      "reviewed_comment_urls": [],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4351/files"
+    },
+    {
+      "number": 4350,
+      "title": "chore(ci): bump the github-actions group with 2 updates",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4350",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T16:29:22Z",
+      "updated_at": "2026-11-22T16:29:25Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "dependabot/github_actions/github-actions-16b1b0b257",
+      "head_sha": "68b7d87395cf3e98916f24335166065b22eb8912",
+      "head_repository": "debpalash/VoiceStudio",
+      "changed_filenames": [
+        ".github/workflows/android-play-internal.yml",
+        ".github/workflows/android-repository.yml",
+        ".github/workflows/electron-release.yml",
+        ".github/workflows/mobile-release.yml",
+        ".github/workflows/mobile.yml"
+      ],
+      "scope": "Update setup-java 6.2.0 to 6.3.0 and SignPath signing action 3.0 to 3.1 in five workflows.",
+      "overlap": "CI action pins only; no runtime overlap with the preferred three plans. Does not itself enable Windows signing or resolve #1779/#3635.",
+      "review_note": "Full patch changes only pinned action SHAs/version comments. No discussion or review records returned. Validate action compatibility separately; setup-java release notes make its Java problem matcher opt-in.",
+      "reviewed_comment_urls": [],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4350/files"
+    },
+    {
+      "number": 4349,
+      "title": "fix(models): restore a healed cache through the selected endpoint",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4349",
+      "author": "DeryFerd",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T14:48:00Z",
+      "updated_at": "2026-11-22T16:11:45Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "fix/cache-repair-honors-selected-endpoint",
+      "head_sha": "69a0c6c6520c9be4d8a2d0ccd2fdf412857e65a8",
+      "head_repository": "DeryFerd/VoiceStudio",
+      "changed_filenames": [
+        "backend/services/hf_cache_repair.py",
+        "changelog.d/4349.fixed.md",
+        "tests/test_hf_cache_repair.py"
+      ],
+      "scope": "Repair Hugging Face cache using the selected endpoint while keeping gated repositories on the canonical endpoint unless explicitly overridden.",
+      "overlap": "Setup/cache repair alternative work; no direct preferred-plan file overlap.",
+      "review_note": "Active review. Endpoint/gating and test-sensitivity findings received author fixes; do not infer merge approval or fresh CI success from comments.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4349#issuecomment-7080840378",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#issuecomment-7080880698",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658589914",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658589918",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6012884927",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658686776",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6012987624",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658689700",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6012990721",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#issuecomment-7081233945",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658707151",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013009100",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658723478",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013025970",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658792507",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013102530",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658793207",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013103322",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#issuecomment-7081591208",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658813204",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658813211",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013126736",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658867265",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013184547",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#discussion_r4658867534",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#pullrequestreview-6013184828",
+        "https://github.com/debpalash/VoiceStudio/pull/4349#issuecomment-7081843997"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4349/files"
+    },
+    {
+      "number": 4348,
+      "title": "fix(electron): honour bare-IPv6 NO_PROXY entries in the setup proxy parser",
+      "state": "open",
+      "draft": false,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4348",
+      "author": "DeryFerd",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-22T14:47:35Z",
+      "updated_at": "2026-11-22T15:08:17Z",
+      "base_ref": "main",
+      "base_sha": "2bb21302241793977055c44f7c52815bcbf0261e",
+      "head_ref": "fix/no-proxy-bare-ipv6-parsing",
+      "head_sha": "57774fcb1a90393be195eabc0a25b3e776007652",
+      "head_repository": "DeryFerd/VoiceStudio",
+      "changed_filenames": [
+        "changelog.d/4348.fixed.md",
+        "electron/src/main/runtime-download.test.ts",
+        "electron/src/main/runtime-download.ts"
+      ],
+      "scope": "Correct bare IPv6 NO_PROXY parsing in runtime downloads.",
+      "overlap": "Direct overlap with any setup proxy parser fix; related to #4314/#4262 only if their reproduced cause matches.",
+      "review_note": "Ready for review. CodeRabbit summary reports no actionable comments in its latest reviewed pass; maintainer approval is not inferred.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4348#issuecomment-7080812425",
+        "https://github.com/debpalash/VoiceStudio/pull/4348#issuecomment-7080851799"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4348/files"
+    },
+    {
+      "number": 4338,
+      "title": "fix(windows-rocm): isolate CTranslate2 from Torch on ROCm 7.2.1 too",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4338",
+      "author": "dytech0021",
+      "labels": [],
+      "assignees": [],
+      "created_at": "2026-11-22T09:20:15Z",
+      "updated_at": "2026-11-22T09:21:43Z",
+      "base_ref": "main",
+      "base_sha": "d5dd3c3e529dbaa1720753d9e0e46940ab5175c2",
+      "head_ref": "fix/windows-rocm7-ct2-isolation",
+      "head_sha": "3115c4810a64c504059dc6ce459a0910253a4176",
+      "head_repository": "dytech0021/VoiceStudio",
+      "changed_filenames": [
+        "backend/core/windows_rocm/asr_isolation.py",
+        "backend/core/windows_rocm/isolation_policy.py",
+        "backend/core/windows_rocm/pipelines.py",
+        "backend/engines/_asr_sidecar/runtime.py",
+        "changelog.d/4338.fixed.md",
+        "docs/install/windows-rocm.md",
+        "tests/test_windows_rocm_argos_isolation.py",
+        "tests/test_windows_rocm_asr_worker.py"
+      ],
+      "scope": "Apply Windows ROCm CTranslate2/Torch isolation to ROCm 7.2.1 as well as ROCm 10.",
+      "overlap": "Direct overlap with #2468-related ASR isolation work; not the #4345 MCP-session defect.",
+      "review_note": "Draft; CLA gate comments wait for contributor signature. An existing draft still constitutes active work.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4338#issuecomment-7077098243",
+        "https://github.com/debpalash/VoiceStudio/pull/4338#issuecomment-7077099692"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4338/files"
+    },
+    {
+      "number": 4337,
+      "title": "fix(transcription): decode M4A before speaker diarization",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4337",
+      "author": "Error404-page",
+      "labels": [],
+      "assignees": [],
+      "created_at": "2026-11-22T08:49:25Z",
+      "updated_at": "2026-11-22T08:57:53Z",
+      "base_ref": "main",
+      "base_sha": "d5dd3c3e529dbaa1720753d9e0e46940ab5175c2",
+      "head_ref": "codex/fix-transcription-diarization-audio",
+      "head_sha": "b6cd2822d27d3a5c02c5d70cf95369b7d79a0508",
+      "head_repository": "Error404-page/VoiceStudio",
+      "changed_filenames": [
+        "backend/services/transcript_diarization.py",
+        "backend/tests/test_transcribe_diarization.py",
+        "docs/features/diarization.md"
+      ],
+      "scope": "Decode M4A to in-memory audio before Pyannote diarization.",
+      "overlap": "Owns the M4A diarization fix surface. No direct preferred-plan file overlap.",
+      "review_note": "Draft. CLA/commit attribution and description completeness remain in comments; private/local identity details are intentionally omitted here.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4337#issuecomment-7076761262",
+        "https://github.com/debpalash/VoiceStudio/pull/4337#issuecomment-7076807982",
+        "https://github.com/debpalash/VoiceStudio/pull/4337#pullrequestreview-6011385689"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4337/files"
+    },
+    {
+      "number": 4221,
+      "title": "feat(dub): guide subtitle-led dubbing from preparation to listening and export",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4221",
+      "author": "davidsiguenza",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-16T12:10:13Z",
+      "updated_at": "2026-11-16T12:17:31Z",
+      "base_ref": "main",
+      "base_sha": "b6f05ec1ccac9d5935a4e6ee942cbbc4664442e1",
+      "head_ref": "pr/06-guided-dubbing",
+      "head_sha": "c80774a3b79376c1c374ef34bbff759b8fb733e0",
+      "head_repository": "davidsiguenza/VoiceStudio",
+      "changed_filenames": [
+        "changelog.d/4221.changed.md",
+        "docs/electron-dubbing.md",
+        "electron/src/renderer/src/components/workspace-sidebar.test.tsx",
+        "electron/src/renderer/src/components/workspace-sidebar.tsx",
+        "electron/src/renderer/src/features/dub/casting-board.tsx",
+        "electron/src/renderer/src/features/dub/dub-draft.test.ts",
+        "electron/src/renderer/src/features/dub/dub-draft.ts",
+        "electron/src/renderer/src/features/dub/dub-empty-state.tsx",
+        "electron/src/renderer/src/features/dub/dub-export-destination.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-export-panel.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-export-panel.tsx",
+        "electron/src/renderer/src/features/dub/dub-flow-state.test.ts",
+        "electron/src/renderer/src/features/dub/dub-flow-state.ts",
+        "electron/src/renderer/src/features/dub/dub-generation-request.ts",
+        "electron/src/renderer/src/features/dub/dub-generation-review.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-generation-review.tsx",
+        "electron/src/renderer/src/features/dub/dub-input-selection.ts",
+        "electron/src/renderer/src/features/dub/dub-issue-state.ts",
+        "electron/src/renderer/src/features/dub/dub-issues.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-issues.tsx",
+        "electron/src/renderer/src/features/dub/dub-media-preview.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-media-preview.tsx",
+        "electron/src/renderer/src/features/dub/dub-narration-panel.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-narration-panel.tsx",
+        "electron/src/renderer/src/features/dub/dub-narration-session.test.ts",
+        "electron/src/renderer/src/features/dub/dub-narration.test.ts",
+        "electron/src/renderer/src/features/dub/dub-narration.ts",
+        "electron/src/renderer/src/features/dub/dub-page.tsx",
+        "electron/src/renderer/src/features/dub/dub-project-guide.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-project-guide.tsx",
+        "electron/src/renderer/src/features/dub/dub-script-comparison.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-script-comparison.tsx",
+        "electron/src/renderer/src/features/dub/dub-session.test.ts",
+        "electron/src/renderer/src/features/dub/dub-session.ts",
+        "electron/src/renderer/src/features/dub/dub-source-panel.tsx",
+        "electron/src/renderer/src/features/dub/dub-source-row.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-speech-preview.ts",
+        "electron/src/renderer/src/features/dub/dub-speech-ready.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-speech-ready.tsx",
+        "electron/src/renderer/src/features/dub/dub-srt-input.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-srt-voice-selection.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-timeline.tsx",
+        "electron/src/renderer/src/features/dub/dub-translation-panel.tsx",
+        "electron/src/renderer/src/features/dub/transcript-issue-navigation.tsx",
+        "electron/src/renderer/src/features/projects/project-format.ts",
+        "electron/src/renderer/src/i18n/locales/ar.json",
+        "electron/src/renderer/src/i18n/locales/de.json",
+        "electron/src/renderer/src/i18n/locales/en.json",
+        "electron/src/renderer/src/i18n/locales/es.json",
+        "electron/src/renderer/src/i18n/locales/fr.json",
+        "electron/src/renderer/src/i18n/locales/gl.json",
+        "electron/src/renderer/src/i18n/locales/hi.json",
+        "electron/src/renderer/src/i18n/locales/id.json",
+        "electron/src/renderer/src/i18n/locales/it.json",
+        "electron/src/renderer/src/i18n/locales/ja.json",
+        "electron/src/renderer/src/i18n/locales/ko.json",
+        "electron/src/renderer/src/i18n/locales/nl.json",
+        "electron/src/renderer/src/i18n/locales/pl.json",
+        "electron/src/renderer/src/i18n/locales/pt.json",
+        "electron/src/renderer/src/i18n/locales/ru.json",
+        "electron/src/renderer/src/i18n/locales/sv.json",
+        "electron/src/renderer/src/i18n/locales/th.json",
+        "electron/src/renderer/src/i18n/locales/tr.json",
+        "electron/src/renderer/src/i18n/locales/uk.json",
+        "electron/src/renderer/src/i18n/locales/vi.json",
+        "electron/src/renderer/src/i18n/locales/zh-CN.json",
+        "electron/src/renderer/src/i18n/locales/zh-TW.json",
+        "tests/test_no_hardcoded_cjk.py"
+      ],
+      "scope": "Guided subtitle-led dubbing from input preparation to playback/export; depends on #4218/#4219/#4220.",
+      "overlap": "High overlap with #4347 (dub-session.ts, dub-translation-panel.tsx) and #4346 export UX. Shares locale files with cloning UI messages if added.",
+      "review_note": "Contributor says keep draft blocked until dependencies land. Comment thread contains CLA acknowledgment; branch-local checks are not fresh upstream CI approval.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4221#issuecomment-6916027417"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4221/files"
+    },
+    {
+      "number": 4220,
+      "title": "feat(dub): plan reusable speech and fit narration to fixed subtitle windows",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4220",
+      "author": "davidsiguenza",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-16T12:10:10Z",
+      "updated_at": "2026-11-16T12:17:28Z",
+      "base_ref": "main",
+      "base_sha": "b6f05ec1ccac9d5935a4e6ee942cbbc4664442e1",
+      "head_ref": "pr/05-audio-generation",
+      "head_sha": "751e562d6ee2184cc7beedfa764eb5283b5bef91",
+      "head_repository": "davidsiguenza/VoiceStudio",
+      "changed_filenames": [
+        "backend/api/routers/dub_export.py",
+        "backend/api/routers/dub_generate.py",
+        "backend/core/diagnostic_reports.py",
+        "backend/schemas/requests.py",
+        "backend/services/dub_issues.py",
+        "backend/services/dub_resume.py",
+        "backend/services/dub_speech_checkpoints.py",
+        "backend/services/dub_speech_preview.py",
+        "backend/services/subtitle_audio.py",
+        "changelog.d/4220.fixed.md",
+        "cli/voicestudio_cli/contracts.json",
+        "docs/STRUCTURE.md",
+        "docs/dub-audio-generation.md",
+        "mobile/contract/openapi.json",
+        "tests/fixtures/api_routes.txt",
+        "tests/test_dub_complete_audio.py",
+        "tests/test_dub_prepared_speech.py",
+        "tests/test_dub_qc_track_language.py",
+        "tests/test_dub_speech_checkpoints.py",
+        "tests/test_dub_voice_match.py",
+        "tests/test_pronunciation_speech_routes.py",
+        "tests/test_redub_incremental.py",
+        "tests/test_smart_fit_generate.py",
+        "tests/test_subtitle_audio_layout.py"
+      ],
+      "scope": "Reusable-speech planning, fixed subtitle windows and fitting; backend counterpart for #4221.",
+      "overlap": "Direct file overlap with #4347 in dub_generate.py and #4346 in dub_export.py; generated API/CLI contracts also shared.",
+      "review_note": "Draft; contributor lists validation limits and pending upstream/hardware gates. Coordinate on the existing branch.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4220#issuecomment-6916024994"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4220/files"
+    },
+    {
+      "number": 4219,
+      "title": "feat(dub): validate subtitles before preparation and create SRT-only jobs",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4219",
+      "author": "davidsiguenza",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-16T12:10:07Z",
+      "updated_at": "2026-11-16T12:17:26Z",
+      "base_ref": "main",
+      "base_sha": "b6f05ec1ccac9d5935a4e6ee942cbbc4664442e1",
+      "head_ref": "pr/04-subtitle-input",
+      "head_sha": "28e93390cbf1649c8c40030f0cf8af1246566122",
+      "head_repository": "davidsiguenza/VoiceStudio",
+      "changed_filenames": [
+        "backend/api/routers/dub_core.py",
+        "changelog.d/4219.added.md",
+        "docs/dub-subtitle-input.md",
+        "mobile/contract/openapi.json",
+        "tests/fixtures/api_routes.txt",
+        "tests/test_dub_subtitle_only.py"
+      ],
+      "scope": "Validate SRT uploads and create SRT-only jobs without ASR.",
+      "overlap": "Subtitle input/provenance work can intersect #4347 edge cases; shares dub_core.py with #4218 and generated OpenAPI/route inventory.",
+      "review_note": "Draft; dependency of #4221. Do not independently implement SRT-only input.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4219#issuecomment-6916023747"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4219/files"
+    },
+    {
+      "number": 4218,
+      "title": "feat(dub): allow media preparation without background separation",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4218",
+      "author": "davidsiguenza",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-16T12:10:05Z",
+      "updated_at": "2026-11-16T12:17:24Z",
+      "base_ref": "main",
+      "base_sha": "b6f05ec1ccac9d5935a4e6ee942cbbc4664442e1",
+      "head_ref": "pr/03-optional-demucs",
+      "head_sha": "826fc55de0e9f20af6782ec8581a7d7a5f3e5683",
+      "head_repository": "davidsiguenza/VoiceStudio",
+      "changed_filenames": [
+        "backend/api/routers/dub_core.py",
+        "backend/services/dub_pipeline.py",
+        "changelog.d/4218.added.md",
+        "cli/voicestudio_cli/contracts.json",
+        "docs/dub-background-separation.md",
+        "mobile/contract/openapi.json",
+        "tests/test_dub_demucs_fallback.py",
+        "tests/test_dub_optional_background.py"
+      ],
+      "scope": "Allow preparation without background separation; distinguish skipped versus failed and adjust cache identity.",
+      "overlap": "Direct conceptual overlap with #4346's missing-separation/cache state; owns dub_pipeline.py and dub_core.py changes.",
+      "review_note": "Draft; dependency of #4221. Failure versus intentional-skip semantics must be preserved in a follow-up.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4218#issuecomment-6916026110"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4218/files"
+    },
+    {
+      "number": 4217,
+      "title": "feat(dub): delete saved projects from the sidebar",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4217",
+      "author": "davidsiguenza",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-16T12:10:02Z",
+      "updated_at": "2026-11-16T12:17:22Z",
+      "base_ref": "main",
+      "base_sha": "b6f05ec1ccac9d5935a4e6ee942cbbc4664442e1",
+      "head_ref": "pr/02-delete-dub-project",
+      "head_sha": "ed980714ec69e9688dd958b1f0997974ee637ae5",
+      "head_repository": "davidsiguenza/VoiceStudio",
+      "changed_filenames": [
+        "changelog.d/4217.added.md",
+        "docs/dub-project-management.md",
+        "electron/src/renderer/src/features/dub/dub-projects.test.tsx",
+        "electron/src/renderer/src/features/dub/dub-projects.tsx",
+        "electron/src/renderer/src/i18n/locales/ar.json",
+        "electron/src/renderer/src/i18n/locales/de.json",
+        "electron/src/renderer/src/i18n/locales/en.json",
+        "electron/src/renderer/src/i18n/locales/es.json",
+        "electron/src/renderer/src/i18n/locales/fr.json",
+        "electron/src/renderer/src/i18n/locales/gl.json",
+        "electron/src/renderer/src/i18n/locales/hi.json",
+        "electron/src/renderer/src/i18n/locales/id.json",
+        "electron/src/renderer/src/i18n/locales/it.json",
+        "electron/src/renderer/src/i18n/locales/ja.json",
+        "electron/src/renderer/src/i18n/locales/ko.json",
+        "electron/src/renderer/src/i18n/locales/nl.json",
+        "electron/src/renderer/src/i18n/locales/pl.json",
+        "electron/src/renderer/src/i18n/locales/pt.json",
+        "electron/src/renderer/src/i18n/locales/ru.json",
+        "electron/src/renderer/src/i18n/locales/sv.json",
+        "electron/src/renderer/src/i18n/locales/th.json",
+        "electron/src/renderer/src/i18n/locales/tr.json",
+        "electron/src/renderer/src/i18n/locales/uk.json",
+        "electron/src/renderer/src/i18n/locales/vi.json",
+        "electron/src/renderer/src/i18n/locales/zh-CN.json",
+        "electron/src/renderer/src/i18n/locales/zh-TW.json"
+      ],
+      "scope": "Delete saved dubbing projects from the sidebar with confirmation.",
+      "overlap": "Shares localized catalogs with #4221 and any new cloning messages; otherwise independent of the preferred repairs.",
+      "review_note": "Draft; explicitly independent of the other prepared changes.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4217#issuecomment-6916022055"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4217/files"
+    },
+    {
+      "number": 4216,
+      "title": "fix(ui): commit searchable voice selections on click",
+      "state": "open",
+      "draft": true,
+      "url": "https://github.com/debpalash/VoiceStudio/pull/4216",
+      "author": "davidsiguenza",
+      "labels": [
+        "cla-signed"
+      ],
+      "assignees": [],
+      "created_at": "2026-11-16T12:10:00Z",
+      "updated_at": "2026-11-16T12:17:19Z",
+      "base_ref": "main",
+      "base_sha": "b6f05ec1ccac9d5935a4e6ee942cbbc4664442e1",
+      "head_ref": "pr/01-select-activation",
+      "head_sha": "e64f70af26c4e91b8064594483b7171707e3ecc1",
+      "head_repository": "davidsiguenza/VoiceStudio",
+      "changed_filenames": [
+        "changelog.d/4216.fixed.md",
+        "docs/searchable-select-activation.md",
+        "electron/src/renderer/src/features/clone/preset-voice-picker.test.tsx",
+        "electron/src/shared/components/SearchableSelect.jsx",
+        "electron/src/shared/test/VoiceSelector.test.jsx"
+      ],
+      "scope": "Commit searchable voice selection on click while retaining focus and mounted options on press.",
+      "overlap": "Adjacent to #4344: touches clone/preset-voice-picker.test.tsx, SearchableSelect.jsx and shared VoiceSelector tests. Does not address model capability leakage.",
+      "review_note": "Draft; explicitly independent. Reuse the shared control without taking over its click-activation change.",
+      "reviewed_comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4216#issuecomment-6916023422"
+      ],
+      "file_list_url": "https://github.com/debpalash/VoiceStudio/pull/4216/files"
+    }
+  ],
+  "candidate_timelines": [
+    {
+      "number": 4344,
+      "url": "https://api.github.com/repos/debpalash/VoiceStudio/issues/4344/timeline?per_page=100&page=1",
+      "pages_read": 1,
+      "event_count": 0,
+      "cross_references": [],
+      "comment_urls": []
+    },
+    {
+      "number": 4345,
+      "url": "https://api.github.com/repos/debpalash/VoiceStudio/issues/4345/timeline?per_page=100&page=1",
+      "pages_read": 1,
+      "event_count": 0,
+      "cross_references": [],
+      "comment_urls": []
+    },
+    {
+      "number": 4254,
+      "url": "https://api.github.com/repos/debpalash/VoiceStudio/issues/4254/timeline?per_page=100&page=1",
+      "pages_read": 1,
+      "event_count": 29,
+      "cross_references": [],
+      "comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/pull/4254#issuecomment-6990565154",
+        "https://github.com/debpalash/VoiceStudio/pull/4254#issuecomment-7035722595",
+        "https://github.com/debpalash/VoiceStudio/pull/4254#issuecomment-7036037257",
+        "https://github.com/debpalash/VoiceStudio/pull/4254#issuecomment-7070476186",
+        "https://github.com/debpalash/VoiceStudio/pull/4254#issuecomment-7071214765"
+      ]
+    },
+    {
+      "number": 3924,
+      "url": "https://api.github.com/repos/debpalash/VoiceStudio/issues/3924/timeline?per_page=100&page=1",
+      "pages_read": 1,
+      "event_count": 51,
+      "cross_references": [
+        {
+          "number": 3940,
+          "title": "perf: offline benchmark harness, recorded baselines, lazy-load the setup wizard (#3924)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3940",
+          "state": "closed",
+          "merged_at": "2026-11-09T22:29:04Z"
+        },
+        {
+          "number": 3943,
+          "title": "perf: load media players on demand (#3924)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3943",
+          "state": "closed",
+          "merged_at": "2026-11-09T20:39:46Z"
+        },
+        {
+          "number": 3946,
+          "title": "perf: check speech-recognition engines without importing them into the backend (#3924)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3946",
+          "state": "closed",
+          "merged_at": "2026-11-09T22:45:42Z"
+        },
+        {
+          "number": 3952,
+          "title": "test(crawler): wait for all same-origin requests; fix the Sharing settle flake",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3952",
+          "state": "closed",
+          "merged_at": "2026-11-09T21:09:28Z"
+        },
+        {
+          "number": 3956,
+          "title": "fix(setup): restart a stalled dependency download after two minutes",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3956",
+          "state": "closed",
+          "merged_at": "2026-11-10T08:36:39Z"
+        },
+        {
+          "number": 3957,
+          "title": "fix(setup): retry temporary download errors and restart stalled downloads (#3882, #3950)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3957",
+          "state": "closed",
+          "merged_at": "2026-11-10T04:42:07Z"
+        },
+        {
+          "number": 3964,
+          "title": "feat(engines): Ming 3.0 TTS as an opt-in sidecar engine (#3793)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3964",
+          "state": "closed",
+          "merged_at": "2026-11-10T10:14:03Z"
+        },
+        {
+          "number": 3976,
+          "title": "Stream OpenAI-compatible PCM speech and support Qwen3-TTS Base",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3976",
+          "state": "closed",
+          "merged_at": "2026-11-10T11:43:13Z"
+        },
+        {
+          "number": 3977,
+          "title": "train/10: hardware encoding + per-voice dictionaries, size-unit fix, PCM streaming + Qwen3-TTS Base, CLA gate",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3977",
+          "state": "closed",
+          "merged_at": "2026-11-10T12:22:48Z"
+        },
+        {
+          "number": 3981,
+          "title": "Coordinate native and buffered MLX speech generation",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3981",
+          "state": "closed",
+          "merged_at": "2026-11-10T13:53:59Z"
+        },
+        {
+          "number": 3986,
+          "title": "perf(dub): stream segment and stem ZIPs without buffering in RAM",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3986",
+          "state": "closed",
+          "merged_at": "2026-11-10T15:38:40Z"
+        },
+        {
+          "number": 3992,
+          "title": "Stream native Qwen speech chunks over WebSocket",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/3992",
+          "state": "closed",
+          "merged_at": "2026-11-10T19:09:54Z"
+        },
+        {
+          "number": 4005,
+          "title": "feat(gguf): bundle omnivoice.cpp tts-server for resident mode (#3654)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4005",
+          "state": "closed",
+          "merged_at": "2026-11-11T20:10:22Z"
+        },
+        {
+          "number": 4028,
+          "title": "fix(watermark): remove the AudioSeal DC bias and fix the checkpoint cache check",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4028",
+          "state": "closed",
+          "merged_at": "2026-11-11T20:34:09Z"
+        },
+        {
+          "number": 4033,
+          "title": "fix(analytics): defer analytics startup work to improve app startup performance",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4033",
+          "state": "closed",
+          "merged_at": null
+        },
+        {
+          "number": 4041,
+          "title": "perf: cut idle polling (supervisor, cloud sync, Windows parent watcher)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4041",
+          "state": "closed",
+          "merged_at": "2026-11-12T10:46:12Z"
+        },
+        {
+          "number": 4043,
+          "title": "perf(models): skip engine unload when a local model folder save changes nothing",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4043",
+          "state": "closed",
+          "merged_at": "2026-11-12T12:46:59Z"
+        },
+        {
+          "number": 4073,
+          "title": "perf: pause idle timers while the window is hidden",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4073",
+          "state": "closed",
+          "merged_at": "2026-11-13T14:50:29Z"
+        },
+        {
+          "number": 4074,
+          "title": "perf: virtualise long project, dub-project and transcription lists",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4074",
+          "state": "closed",
+          "merged_at": "2026-11-13T15:02:55Z"
+        },
+        {
+          "number": 4079,
+          "title": "perf(projects): virtualise the Projects grid view",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4079",
+          "state": "closed",
+          "merged_at": "2026-11-13T20:01:43Z"
+        },
+        {
+          "number": 4088,
+          "title": "perf(dub): resume a crashed dub from its finished segments (#3924)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4088",
+          "state": "closed",
+          "merged_at": "2026-11-13T23:42:00Z"
+        },
+        {
+          "number": 4090,
+          "title": "Mac Stories becomes slow and returns Home when rendering a short paragraph",
+          "url": "https://github.com/debpalash/VoiceStudio/issues/4090",
+          "state": "open",
+          "merged_at": null
+        },
+        {
+          "number": 4117,
+          "title": "fix(memory): free idle GPU memory before a generate when VRAM is low",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4117",
+          "state": "closed",
+          "merged_at": "2026-11-14T12:17:46Z"
+        },
+        {
+          "number": 4169,
+          "title": "fix(gallery): bound mounted community voice cards",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4169",
+          "state": "closed",
+          "merged_at": "2026-11-16T21:07:28Z"
+        },
+        {
+          "number": 4198,
+          "title": "fix(dub): keep watermarking off the event loop",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4198",
+          "state": "closed",
+          "merged_at": "2026-11-16T21:07:27Z"
+        },
+        {
+          "number": 4227,
+          "title": "fix: merge train for fixes and features (#4169–#4224)",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4227",
+          "state": "closed",
+          "merged_at": "2026-11-16T21:07:25Z"
+        },
+        {
+          "number": 4320,
+          "title": "perf: speed up Electron startup, UI responsiveness, and backend DB/engine boot",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4320",
+          "state": "closed",
+          "merged_at": "2026-11-21T13:02:31Z"
+        },
+        {
+          "number": 4323,
+          "title": "perf: faster dub pipeline, transcription and job saves",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4323",
+          "state": "closed",
+          "merged_at": "2026-11-21T13:57:59Z"
+        },
+        {
+          "number": 4326,
+          "title": "feat(dub): download the dubbing demo videos on demand",
+          "url": "https://github.com/debpalash/VoiceStudio/pull/4326",
+          "state": "closed",
+          "merged_at": "2026-11-21T22:43:30Z"
+        }
+      ],
+      "comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6746084134",
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6821554774",
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6877223053",
+        "https://github.com/debpalash/VoiceStudio/issues/3924#issuecomment-6892897608"
+      ]
+    },
+    {
+      "number": 4346,
+      "url": "https://api.github.com/repos/debpalash/VoiceStudio/issues/4346/timeline?per_page=100&page=1",
+      "pages_read": 1,
+      "event_count": 0,
+      "cross_references": [],
+      "comment_urls": []
+    },
+    {
+      "number": 4347,
+      "url": "https://api.github.com/repos/debpalash/VoiceStudio/issues/4347/timeline?per_page=100&page=1",
+      "pages_read": 1,
+      "event_count": 1,
+      "cross_references": [],
+      "comment_urls": [
+        "https://github.com/debpalash/VoiceStudio/issues/4347#issuecomment-7081838333"
+      ]
+    }
+  ],
+  "related_closed_pr_searches": [
+    {
+      "query": "repo:debpalash/VoiceStudio is:pr is:closed updated:>=2026-11-01 MCP",
+      "url": "https://api.github.com/search/issues?q=repo%3Adebpalash%2FVoiceStudio%20is%3Apr%20is%3Aclosed%20updated%3A%3E%3D2026-11-01%20MCP&per_page=100&page=1&sort=updated&order=desc",
+      "reported_total": 26,
+      "returned": 26,
+      "incomplete_results": false,
+      "pages_read": 1,
+      "result_numbers": [
+        4254,
+        4333,
+        4330,
+        4323,
+        4303,
+        4315,
+        4124,
+        4112,
+        4128,
+        4059,
+        4042,
+        4032,
+        4047,
+        3995,
+        4064,
+        3916,
+        4057,
+        4029,
+        3949,
+        3941,
+        3664,
+        3819,
+        3694,
+        3669,
+        3692,
+        3865
+      ]
+    },
+    {
+      "query": "repo:debpalash/VoiceStudio is:pr is:closed updated:>=2026-11-01 MLX",
+      "url": "https://api.github.com/search/issues?q=repo%3Adebpalash%2FVoiceStudio%20is%3Apr%20is%3Aclosed%20updated%3A%3E%3D2026-11-01%20MLX&per_page=100&page=1&sort=updated&order=desc",
+      "reported_total": 25,
+      "returned": 25,
+      "incomplete_results": false,
+      "pages_read": 1,
+      "result_numbers": [
+        4327,
+        4272,
+        3992,
+        4088,
+        4043,
+        3946,
+        3833,
+        3991,
+        3863,
+        3996,
+        3987,
+        3985,
+        3981,
+        3977,
+        3976,
+        3968,
+        3960,
+        3940,
+        3731,
+        3869,
+        3702,
+        3678,
+        3865,
+        3647,
+        3667
+      ]
+    },
+    {
+      "query": "repo:debpalash/VoiceStudio is:pr is:closed updated:>=2026-11-01 streaming",
+      "url": "https://api.github.com/search/issues?q=repo%3Adebpalash%2FVoiceStudio%20is%3Apr%20is%3Aclosed%20updated%3A%3E%3D2026-11-01%20streaming&per_page=100&page=1&sort=updated&order=desc",
+      "reported_total": 46,
+      "returned": 46,
+      "incomplete_results": false,
+      "pages_read": 1,
+      "result_numbers": [
+        4254,
+        4333,
+        4323,
+        4320,
+        4307,
+        4302,
+        4286,
+        4274,
+        4223,
+        3870,
+        4112,
+        4045,
+        4087,
+        4126,
+        4095,
+        3992,
+        4088,
+        4224,
+        4042,
+        4073,
+        4044,
+        4043,
+        4047,
+        3991,
+        4114,
+        3969,
+        4040,
+        3486,
+        3932,
+        3905,
+        3996,
+        3986,
+        3983,
+        3985,
+        3981,
+        3977,
+        3976,
+        3970,
+        3966,
+        3958,
+        3695,
+        3731,
+        3868,
+        3897,
+        3874,
+        3667
+      ]
+    },
+    {
+      "query": "repo:debpalash/VoiceStudio is:pr is:closed updated:>=2026-11-01 performance",
+      "url": "https://api.github.com/search/issues?q=repo%3Adebpalash%2FVoiceStudio%20is%3Apr%20is%3Aclosed%20updated%3A%3E%3D2026-11-01%20performance&per_page=100&page=1&sort=updated&order=desc",
+      "reported_total": 58,
+      "returned": 58,
+      "incomplete_results": false,
+      "pages_read": 1,
+      "result_numbers": [
+        4254,
+        4332,
+        4330,
+        4331,
+        4327,
+        4272,
+        4323,
+        4322,
+        4320,
+        4321,
+        4294,
+        4285,
+        4243,
+        4085,
+        4084,
+        4151,
+        4117,
+        4072,
+        4137,
+        4088,
+        4169,
+        4196,
+        4227,
+        4042,
+        4074,
+        4073,
+        4041,
+        3787,
+        4043,
+        4167,
+        3946,
+        4047,
+        4079,
+        4033,
+        3916,
+        4022,
+        3993,
+        4031,
+        3486,
+        4028,
+        4002,
+        3986,
+        3963,
+        3976,
+        3965,
+        3966,
+        3940,
+        3943,
+        3712,
+        3925,
+        3929,
+        3673,
+        3675,
+        3648,
+        3664,
+        3845,
+        3810,
+        3752
+      ]
+    }
+  ],
+  "limitations": [
+    "Snapshot of public upstream state, not an ownership reservation or guarantee of no unpublished work.",
+    "All open issues and PRs were enumerated; closed-history coverage is the explicit topic/date queries, not every historic PR.",
+    "Issue reports and author test claims were not independently reproduced by this backlog audit.",
+    "Issue titles match upstream except #4118, whose reporter-local path is explicitly redacted; English scope paraphrases are in summary. Full issue/comment bodies, logs and CLA signatures are excluded."
+  ]
+}
