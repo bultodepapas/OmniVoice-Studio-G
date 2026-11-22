@@ -1,6 +1,12 @@
 # VoiceStudio contribution plan — 2026-11-22
 
-## Recommended starting point
+## New features and optimization research
+
+The [feature and optimization research](05-feature-and-optimization-research.md) extends this plan with ten shortlisted directions and five secondary investigations. Its recommended first investigations are **saved audition sessions**, **spoken-script completeness review**, and **long-form CPU finalization outside the GPU worker**. A small benchmark timing correction is the recommended first measurement contribution.
+
+The addendum was refreshed at **2026-11-22 17:18:54 UTC / 12:18:54 America/Bogota**: upstream main is unchanged, all 15 open PR heads still match the audit, and the issue count is now 29 after new low-VRAM report [#4355](https://github.com/debpalash/VoiceStudio/issues/4355). The original audit below remains a dated snapshot. The new document links detailed product, quality/automation, and performance appendices with source evidence, experiment plans and proceed/stop criteria.
+
+## Bug-fix starting point
 
 Start with [#4344](https://github.com/debpalash/VoiceStudio/issues/4344): make MLX model capabilities accurate and prevent a selected saved voice from being silently discarded. Establish a failing capability/request regression before changing behavior. The source provides a concrete explanation, the change can stay bounded, and the reviewed open PR queue contains no matching implementation.
 
@@ -34,6 +40,7 @@ The audit covers every issue and PR open at retrieval, the changed-file lists fo
 | [02 — MCP stdio sessions](02-mcp-stdio-session.md) | How to reproduce the exact exchange, test the session lifecycle, and choose a justified fix. |
 | [03 — Progressive markup streaming](03-progressive-markup-streaming.md) | How to deliver earlier audio while preserving gaps, final processing, cancellation, and provenance marking. |
 | [04 — Dubbing translation investigation](04-dubbing-translation-investigation.md) | How to investigate a potentially expensive incorrect-language render without duplicating the active dubbing series. |
+| [05 — New features and optimization research](05-feature-and-optimization-research.md) | Which new creator, quality, automation and performance directions merit investigation, what already exists, and what evidence would justify implementation. |
 | [Validation and delivery](validation-and-delivery.md) | How to refresh ownership, start implementation branches, collect evidence, and prepare focused PRs. |
 
 ## Ranked decisions
